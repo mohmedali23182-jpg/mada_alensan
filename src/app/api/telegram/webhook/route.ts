@@ -6,29 +6,43 @@ export const runtime = "nodejs";
 
 function isValidSecret(request: Request) {
   const expected = process.env.TELEGRAM_WEBHOOK_SECRET;
-  if (!expected) return false;
+  
+  // إذا لم يكن السر موجوداً في البيئة، نسجل تحذيراً ونسمح بالمرور (حسب المطلوب في الخطوة 5)
+  if (!expected) {
+    console.warn("WARNING: TELEGRAM_WEBHOOK_SECRET is not defined in environment variables.");
+    return true; 
+  }
+
   const headerSecret = request.headers.get("x-telegram-bot-api-secret-token");
-  const urlSecret = new URL(request.url).searchParams.get("secret");
-  return headerSecret === expected || urlSecret === expected;
+  return headerSecret === expected;
 }
 
 export async function POST(request: Request) {
   if (!isValidSecret(request)) {
-    return NextResponse.json({ ok: false, message: "Invalid Telegram webhook secret" }, { status: 401 });
+    return NextResponse.json({ ok: false, message: "Unauthorized" }, { status: 401 });
   }
 
   const update = (await request.json().catch(() => null)) as TelegramUpdate | null;
-  if (!update) return NextResponse.json({ ok: false, message: "Invalid Telegram payload" }, { status: 400 });
+  
+  // إذا كانت الحمولة غير صالحة، نرجع 200 لتجنب إعادة المحاولة من تليجرام مع تسجيل الخطأ
+  if (!update) {
+    console.error("Invalid Telegram payload received");
+    return NextResponse.json({ ok: true });
+  }
 
   try {
-    const result = await handleTelegramUpdate(update);
-    return NextResponse.json({ ok: true, result });
+    // معالجة التحديث في الخلفية أو بانتظار بسيط
+    await handleTelegramUpdate(update);
+    // نرجع دائماً ok: true حسب المطلوب في الخطوة 7
+    return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error("Telegram webhook error", error);
-    return NextResponse.json({ ok: false, message: error instanceof Error ? error.message : "Telegram webhook failed" }, { status: 500 });
+    console.error("Telegram webhook processing error:", error);
+    // نرجع دائماً ok: true حتى في حالة الخطأ لتجنب تكرار الطلبات الفاشلة من تليجرام
+    return NextResponse.json({ ok: true });
   }
 }
 
 export async function GET() {
-  return NextResponse.json({ ok: true, name: "Madaalinsan Telegram webhook" });
+  // إرجاع الاستجابة المطلوبة في الخطوة 6
+  return NextResponse.json({ ok: true, webhook: "telegram" });
 }
