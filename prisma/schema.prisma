@@ -1,0 +1,870 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+/// Mada Alinsan production editorial schema.
+/// Designed as a real CMS domain model: editorial workflow, content blocks,
+/// media library, SEO, redirects, revisions, audit logs, menu management,
+/// submissions, cases, Telegram publishing, and analytics summaries.
+
+enum UserRole {
+  OWNER
+  ADMIN
+  EDITOR
+  REVIEWER
+  AUTHOR
+  CONTRIBUTOR
+  FIELD_REPORTER
+  VIEWER
+}
+
+enum PostStatus {
+  DRAFT
+  REVIEW
+  NEEDS_EDIT
+  APPROVED
+  SCHEDULED
+  PUBLISHED
+  ARCHIVED
+  REJECTED
+}
+
+enum PostType {
+  NEWS
+  STORY
+  HUMAN_MESSAGE
+  CASE_FILE
+  CONTRIBUTOR_ARTICLE
+  REPORT
+  ANALYSIS
+  OPINION
+  INTERVIEW
+  FEATURE
+  PAGE
+}
+
+enum ContentVisibility {
+  PUBLIC
+  PRIVATE
+  MEMBERS_ONLY
+  UNLISTED
+}
+
+enum ContentBlockType {
+  PARAGRAPH
+  HEADING
+  IMAGE
+  GALLERY
+  QUOTE
+  VIDEO
+  AUDIO
+  EMBED
+  CALLOUT
+  TABLE
+  CODE
+  POLL
+  DIVIDER
+  HTML
+}
+
+enum EditorialAction {
+  CREATED
+  UPDATED
+  SUBMITTED_FOR_REVIEW
+  RETURNED_FOR_EDIT
+  APPROVED
+  SCHEDULED
+  PUBLISHED
+  UNPUBLISHED
+  ARCHIVED
+  RESTORED
+  DELETED
+}
+
+enum CaseStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  VERIFIED
+  PUBLISHED
+  CONTACTED
+  IN_PROGRESS
+  RESOLVED
+  REJECTED
+}
+
+enum SubmissionType {
+  STORY
+  ARTICLE
+  CASE_REPORT
+  CONTACT
+}
+
+enum SubmissionStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  NEEDS_INFO
+  APPROVED
+  PUBLISHED
+  REJECTED
+  ARCHIVED
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  AUDIO
+  PDF
+  DOCUMENT
+  EXTERNAL_LINK
+}
+
+enum MediaUsageType {
+  COVER
+  THUMBNAIL
+  INLINE
+  GALLERY
+  ATTACHMENT
+  AUTHOR_AVATAR
+  SOCIAL_IMAGE
+}
+
+enum CommentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SPAM
+  TRASHED
+}
+
+enum ReactionType {
+  LIKE
+  LOVE
+  SUPPORT
+  SAVE
+}
+
+enum RedirectStatusCode {
+  M301
+  M302
+  M307
+  M308
+}
+
+enum PageStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum TelegramDraftStep {
+  IDLE
+  TITLE
+  EXCERPT
+  CONTENT
+  AUTHOR
+  COVER
+  CATEGORY
+  SCHEDULE
+  CONFIRM
+}
+
+model Organization {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @default("مدى الناس")
+  slug        String   @unique @default("mada-alinsan")
+  description String?
+  logoUrl     String?
+  websiteUrl  String?
+  locale      String   @default("ar-YE")
+  timezone    String   @default("Asia/Aden")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  settings    SiteSetting[]
+  menus       Menu[]
+
+  @@index([slug])
+}
+
+model User {
+  id              String    @id @default(uuid()) @db.Uuid
+  name            String
+  email           String    @unique
+  passwordHash    String
+  role            UserRole  @default(VIEWER)
+  avatarUrl       String?
+  bio             String?
+  title           String?
+  phone           String?
+  isActive        Boolean   @default(true)
+  lastLoginAt     DateTime?
+  emailVerifiedAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+
+  organizationId  String? @db.Uuid
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  posts           Post[]    @relation("PostAuthor")
+  reviewedPosts   Post[]    @relation("PostReviewer")
+  media           Media[]
+  activityLogs    ActivityLog[]
+  revisions       PostRevision[]
+  workflowEvents  PostWorkflowEvent[]
+  comments        Comment[]
+  bookmarks       Bookmark[]
+  reactions       PostReaction[]
+  postViews       PostView[]
+
+  @@index([role])
+  @@index([isActive])
+  @@index([organizationId])
+}
+
+model Contributor {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String
+  slug         String   @unique
+  email        String?
+  phone        String?
+  bio          String?
+  avatarUrl    String?
+  coverUrl     String?
+  facebookUrl  String?
+  instagramUrl String?
+  xUrl         String?
+  whatsappUrl  String?
+  telegramUrl  String?
+  youtubeUrl   String?
+  websiteUrl   String?
+  isActive     Boolean  @default(true)
+  verifiedAt   DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+
+  posts        Post[]
+
+  @@index([slug])
+  @@index([isActive])
+}
+
+model Category {
+  id             String    @id @default(uuid()) @db.Uuid
+  name           String
+  slug           String    @unique
+  description    String?
+  icon           String?
+  color          String?
+  coverImage     String?
+  order          Int       @default(0)
+  isActive       Boolean   @default(true)
+  seoTitle       String?
+  seoDescription String?
+  parentId       String? @db.Uuid
+  parent         Category? @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children       Category[] @relation("CategoryTree")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  posts          Post[]
+  menuItems      MenuItem[]
+
+  @@index([slug])
+  @@index([isActive, order])
+  @@index([parentId])
+}
+
+model Region {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  slug        String   @unique
+  city        String?
+  country     String   @default("اليمن")
+  countryCode String?  @default("YE")
+  latitude    Float?
+  longitude   Float?
+  keywords    String[] @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  posts       Post[]
+  cases       Case[]
+  submissions Submission[]
+
+  @@index([slug])
+  @@index([countryCode])
+}
+
+model Post {
+  id                 String            @id @default(uuid()) @db.Uuid
+  title              String
+  slug               String            @unique
+  excerpt            String?
+  content            String
+  contentJson         Json?
+  coverImage         String?
+  thumbnail          String?
+  quote              String?
+  type               PostType          @default(NEWS)
+  status             PostStatus        @default(DRAFT)
+  visibility         ContentVisibility @default(PUBLIC)
+  featured           Boolean           @default(false)
+  isStoryOfDay       Boolean           @default(false)
+  breaking           Boolean           @default(false)
+  allowComments      Boolean           @default(true)
+  readingTime        Int               @default(1)
+  viewsCount         Int               @default(0)
+  wordCount          Int               @default(0)
+  sortScore          Int               @default(0)
+  publishedAt        DateTime?
+  scheduledAt        DateTime?
+  approvedAt         DateTime?
+  archivedAt         DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  deletedAt          DateTime?
+
+  // Inline SEO fields are kept for current app compatibility.
+  seoTitle           String?
+  seoDescription     String?
+  seoKeywords        String[]          @default([])
+  ogTitle            String?
+  ogDescription      String?
+  ogImage            String?
+  twitterTitle       String?
+  twitterDescription String?
+  twitterImage       String?
+  canonicalUrl       String?
+  noindex            Boolean           @default(false)
+  nofollow           Boolean           @default(false)
+  structuredData     Json?
+
+  city               String?
+  country            String?           @default("اليمن")
+  geoKeywords        String[]          @default([])
+  latitude           Float?
+  longitude          Float?
+
+  authorId           String? @db.Uuid
+  author             User?             @relation("PostAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  reviewerId         String? @db.Uuid
+  reviewer           User?             @relation("PostReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  contributorId      String? @db.Uuid
+  contributor        Contributor?      @relation(fields: [contributorId], references: [id], onDelete: SetNull)
+  categoryId         String? @db.Uuid
+  category           Category?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  regionId           String? @db.Uuid
+  region             Region?           @relation(fields: [regionId], references: [id], onDelete: SetNull)
+
+  media              Media[]
+  mediaLinks         PostMedia[]
+  tags               PostTag[]
+  blocks             PostBlock[]
+  revisions          PostRevision[]
+  workflowEvents     PostWorkflowEvent[]
+  views              PostView[]
+  comments           Comment[]
+  reactions          PostReaction[]
+  bookmarks          Bookmark[]
+  stats              PostStats?
+  seo                PostSeo?
+
+  @@index([slug])
+  @@index([status, publishedAt])
+  @@index([status, scheduledAt])
+  @@index([type])
+  @@index([visibility])
+  @@index([featured, publishedAt])
+  @@index([isStoryOfDay, publishedAt])
+  @@index([categoryId])
+  @@index([regionId])
+  @@index([authorId])
+  @@index([contributorId])
+  @@index([deletedAt])
+}
+
+model PostSeo {
+  id                 String   @id @default(uuid()) @db.Uuid
+  postId             String   @unique @db.Uuid
+  metaTitle          String?
+  metaDescription    String?
+  canonicalUrl       String?
+  ogTitle            String?
+  ogDescription      String?
+  ogImageUrl         String?
+  twitterTitle       String?
+  twitterDescription String?
+  twitterImageUrl    String?
+  keywords           String[] @default([])
+  noindex            Boolean  @default(false)
+  nofollow           Boolean  @default(false)
+  structuredData     Json?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  post               Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+model PostBlock {
+  id        String           @id @default(uuid()) @db.Uuid
+  postId    String @db.Uuid
+  type      ContentBlockType
+  data      Json
+  order     Int              @default(0)
+  isActive  Boolean          @default(true)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  post      Post             @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId, order])
+  @@index([type])
+}
+
+model PostRevision {
+  id          String   @id @default(uuid()) @db.Uuid
+  postId      String @db.Uuid
+  title       String
+  excerpt     String?
+  content     String
+  contentJson Json?
+  snapshot    Json?
+  changeNote  String?
+  editorId    String? @db.Uuid
+  createdAt   DateTime @default(now())
+
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  editor      User?    @relation(fields: [editorId], references: [id], onDelete: SetNull)
+
+  @@index([postId, createdAt])
+  @@index([editorId])
+}
+
+model PostWorkflowEvent {
+  id          String          @id @default(uuid()) @db.Uuid
+  postId      String @db.Uuid
+  actorId     String? @db.Uuid
+  action      EditorialAction
+  fromStatus  PostStatus?
+  toStatus    PostStatus?
+  note        String?
+  metadata    Json?
+  createdAt   DateTime        @default(now())
+
+  post        Post            @relation(fields: [postId], references: [id], onDelete: Cascade)
+  actor       User?           @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([postId, createdAt])
+  @@index([actorId])
+  @@index([action])
+}
+
+model Tag {
+  id        String    @id @default(uuid()) @db.Uuid
+  name      String
+  slug      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  posts     PostTag[]
+
+  @@index([slug])
+}
+
+model PostTag {
+  postId String @db.Uuid
+  tagId  String @db.Uuid
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag    Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+  @@index([tagId])
+}
+
+model PostStats {
+  postId        String   @id @db.Uuid
+  viewsCount    Int      @default(0)
+  uniqueViews   Int      @default(0)
+  likesCount    Int      @default(0)
+  savesCount    Int      @default(0)
+  commentsCount Int      @default(0)
+  sharesCount   Int      @default(0)
+  lastViewedAt  DateTime?
+  updatedAt     DateTime @updatedAt
+
+  post          Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+model PostView {
+  id        String   @id @default(uuid()) @db.Uuid
+  postId    String @db.Uuid
+  userId    String? @db.Uuid
+  ipHash    String?
+  userAgent String?
+  referrer  String?
+  country   String?
+  city      String?
+  createdAt DateTime @default(now())
+
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([postId, createdAt])
+  @@index([userId])
+  @@index([ipHash])
+}
+
+model Comment {
+  id        String        @id @default(uuid()) @db.Uuid
+  postId    String @db.Uuid
+  userId    String? @db.Uuid
+  parentId  String? @db.Uuid
+  authorName String?
+  authorEmail String?
+  content   String
+  status    CommentStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  post      Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  parent    Comment?      @relation("CommentThread", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[]     @relation("CommentThread")
+
+  @@index([postId, status])
+  @@index([parentId])
+}
+
+model PostReaction {
+  id        String       @id @default(uuid()) @db.Uuid
+  postId    String @db.Uuid
+  userId    String? @db.Uuid
+  ipHash    String?
+  type      ReactionType
+  createdAt DateTime     @default(now())
+
+  post      Post         @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([postId, type])
+  @@index([userId])
+}
+
+model Bookmark {
+  id        String   @id @default(uuid()) @db.Uuid
+  postId    String @db.Uuid
+  userId    String @db.Uuid
+  createdAt DateTime @default(now())
+
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([userId])
+}
+
+model Case {
+  id                String     @id @default(uuid()) @db.Uuid
+  title             String
+  slug              String     @unique
+  type              String
+  description       String
+  fullDescription   String?
+  urgencyLevel      Int        @default(1)
+  status            CaseStatus @default(SUBMITTED)
+  responsibleEntity String?
+  contactPerson     String?
+  coverImage        String?
+  lastUpdated       DateTime   @default(now())
+  publishedAt       DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  deletedAt         DateTime?
+
+  seoTitle          String?
+  seoDescription    String?
+  geoKeywords       String[]   @default([])
+  latitude          Float?
+  longitude         Float?
+
+  regionId          String? @db.Uuid
+  region            Region?    @relation(fields: [regionId], references: [id], onDelete: SetNull)
+  updates           CaseUpdate[]
+  media             Media[]
+
+  @@index([slug])
+  @@index([status])
+  @@index([urgencyLevel])
+  @@index([regionId])
+}
+
+model CaseUpdate {
+  id        String      @id @default(uuid()) @db.Uuid
+  caseId    String @db.Uuid
+  title     String
+  body      String
+  status    CaseStatus?
+  createdAt DateTime    @default(now())
+  case      Case        @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@index([caseId, createdAt])
+}
+
+model Submission {
+  id              String           @id @default(uuid()) @db.Uuid
+  type            SubmissionType
+  status          SubmissionStatus @default(SUBMITTED)
+  fullName        String?
+  email           String?
+  phone           String?
+  isAnonymous     Boolean          @default(false)
+  title           String?
+  summary         String?
+  body            String
+  socialUrl       String?
+  allowPublish    Boolean          @default(false)
+  allowPhoto      Boolean          @default(false)
+  urgencyLevel    String?
+  caseType        String?
+  reviewNotes     String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  regionId        String? @db.Uuid
+  region          Region?          @relation(fields: [regionId], references: [id], onDelete: SetNull)
+  media           Media[]
+
+  @@index([type, status])
+  @@index([createdAt])
+  @@index([regionId])
+}
+
+model ContactMessage {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  email     String?
+  phone     String?
+  subject   String?
+  message   String
+  status    String   @default("new")
+  createdAt DateTime @default(now())
+
+  @@index([status, createdAt])
+}
+
+model Media {
+  id            String       @id @default(uuid()) @db.Uuid
+  type          MediaType
+  url           String
+  path          String?
+  filename      String?
+  mimeType      String?
+  sizeBytes     Int?
+  width         Int?
+  height        Int?
+  blurhash      String?
+  altText       String?
+  caption       String?
+  credit        String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  uploadedById  String? @db.Uuid
+  uploadedBy    User?        @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+  postId        String? @db.Uuid
+  post          Post?        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  caseId        String? @db.Uuid
+  case          Case?        @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  submissionId  String? @db.Uuid
+  submission    Submission?  @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  postLinks     PostMedia[]
+
+  @@index([type])
+  @@index([postId])
+  @@index([uploadedById])
+}
+
+model PostMedia {
+  postId    String @db.Uuid
+  mediaId   String @db.Uuid
+  usageType MediaUsageType @default(INLINE)
+  order     Int            @default(0)
+  createdAt DateTime       @default(now())
+
+  post      Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
+  media     Media          @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@id([postId, mediaId, usageType])
+  @@index([mediaId])
+  @@index([postId, usageType, order])
+}
+
+model Page {
+  id             String     @id @default(uuid()) @db.Uuid
+  title          String
+  slug           String     @unique
+  content        String
+  contentJson    Json?
+  status         PageStatus @default(DRAFT)
+  seoTitle       String?
+  seoDescription String?
+  publishedAt    DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  menuItems      MenuItem[]
+
+  @@index([slug])
+  @@index([status])
+}
+
+model Menu {
+  id             String        @id @default(uuid()) @db.Uuid
+  name           String
+  location       String
+  isActive       Boolean       @default(true)
+  organizationId String? @db.Uuid
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  items          MenuItem[]
+
+  @@unique([location, organizationId])
+  @@index([isActive])
+}
+
+model MenuItem {
+  id         String     @id @default(uuid()) @db.Uuid
+  menuId     String @db.Uuid
+  label      String
+  url        String?
+  target     String?    @default("_self")
+  icon       String?
+  order      Int        @default(0)
+  isActive   Boolean    @default(true)
+  parentId   String? @db.Uuid
+  categoryId String? @db.Uuid
+  pageId     String? @db.Uuid
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  menu       Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  parent     MenuItem?  @relation("MenuTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children   MenuItem[] @relation("MenuTree")
+  category   Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  page       Page?      @relation(fields: [pageId], references: [id], onDelete: SetNull)
+
+  @@index([menuId, order])
+  @@index([parentId])
+}
+
+model Redirect {
+  id         String             @id @default(uuid()) @db.Uuid
+  oldPath    String             @unique
+  newPath    String
+  statusCode RedirectStatusCode @default(M301)
+  isActive   Boolean            @default(true)
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  @@index([isActive])
+}
+
+model NewsletterSubscriber {
+  id             String    @id @default(uuid()) @db.Uuid
+  email          String    @unique
+  name           String?
+  status         String    @default("ACTIVE")
+  source         String?
+  subscribedAt   DateTime  @default(now())
+  unsubscribedAt DateTime?
+
+  @@index([status])
+}
+
+model SocialLink {
+  id            String   @id @default(uuid()) @db.Uuid
+  platform      String
+  label         String
+  url           String
+  icon          String?
+  isActive      Boolean  @default(true)
+  showInHeader  Boolean  @default(false)
+  showInFooter  Boolean  @default(true)
+  showInContact Boolean  @default(true)
+  order         Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([isActive, order])
+}
+
+model SiteSetting {
+  id             String        @id @default(uuid()) @db.Uuid
+  key            String        @unique
+  value          Json
+  group          String?       @default("general")
+  type           String?       @default("json")
+  isPublic       Boolean       @default(false)
+  organizationId String? @db.Uuid
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId])
+  @@index([group])
+  @@index([isPublic])
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  action    String
+  entity    String?
+  entityId  String?
+  metadata  Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  userId    String? @db.Uuid
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@index([userId])
+}
+
+model TelegramDraft {
+  id        String            @id @default(uuid()) @db.Uuid
+  chatId    String            @unique
+  userId    String? @db.Uuid
+  step      TelegramDraftStep @default(IDLE)
+  data      Json              @default("{}")
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@index([chatId])
+}
+
+model TelegramPublishLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  postId      String? @db.Uuid
+  chatId      String?
+  channelId   String?
+  messageId   String?
+  status      String   @default("sent")
+  error       String?
+  createdAt   DateTime @default(now())
+
+  @@index([postId])
+  @@index([createdAt])
+}

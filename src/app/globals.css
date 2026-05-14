@@ -1,0 +1,181 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --navy: #0E1B2A;
+    --ivory: #F5EFE3;
+    --gold: #C99A3E;
+    --hope: #2F8F6B;
+    --teal: #0F766E;
+    --urgent: #B84C4C;
+    --white: #FFFFFF;
+    --text: #3E4652;
+    --font-cairo: "Cairo", "Noto Kufi Arabic", "Tajawal", system-ui, sans-serif;
+    --font-tajawal: "Tajawal", "Cairo", system-ui, sans-serif;
+    --font-kufi: "Noto Kufi Arabic", "Cairo", system-ui, sans-serif;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    direction: rtl;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: var(--font-tajawal), var(--font-cairo), sans-serif;
+    background-color: #F5EFE3;
+    color: #3E4652;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-cairo), var(--font-kufi), sans-serif;
+    font-weight: 700;
+  }
+
+  h4, h5, h6 {
+    font-family: var(--font-cairo), sans-serif;
+    font-weight: 600;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center gap-2 bg-gold text-white px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 hover:bg-gold-dark hover:shadow-gold hover:-translate-y-0.5 active:translate-y-0;
+    font-family: var(--font-cairo), sans-serif;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 bg-transparent border-2 border-navy text-navy px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 hover:bg-navy hover:text-white active:translate-y-0;
+    font-family: var(--font-cairo), sans-serif;
+  }
+
+  .btn-outline-gold {
+    @apply inline-flex items-center gap-2 bg-transparent border-2 border-gold text-gold px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 hover:bg-gold hover:text-white;
+    font-family: var(--font-cairo), sans-serif;
+  }
+
+  .btn-urgent {
+    @apply inline-flex items-center gap-2 bg-urgent text-white px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 hover:bg-urgent-dark hover:shadow-lg hover:-translate-y-0.5;
+    font-family: var(--font-cairo), sans-serif;
+  }
+
+  .btn-hope {
+    @apply inline-flex items-center gap-2 bg-hope text-white px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 hover:bg-hope-dark hover:shadow-lg hover:-translate-y-0.5;
+    font-family: var(--font-cairo), sans-serif;
+  }
+
+  .card {
+    @apply bg-white rounded-2xl shadow-card transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1;
+  }
+
+  .card-ivory {
+    @apply bg-ivory rounded-2xl shadow-card transition-all duration-300 hover:shadow-card-hover;
+  }
+
+  .section-title {
+    @apply text-2xl md:text-3xl font-bold text-navy;
+    font-family: var(--font-cairo), sans-serif;
+  }
+
+  .section-subtitle {
+    @apply text-text-light text-base;
+    font-family: var(--font-tajawal), sans-serif;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
+    font-family: var(--font-cairo), sans-serif;
+  }
+
+  .badge-gold {
+    @apply badge bg-gold/10 text-gold-dark border border-gold/20;
+  }
+
+  .badge-hope {
+    @apply badge bg-hope/10 text-hope-dark border border-hope/20;
+  }
+
+  .badge-urgent {
+    @apply badge bg-urgent/10 text-urgent border border-urgent/20;
+  }
+
+  .badge-teal {
+    @apply badge bg-teal/10 text-teal border border-teal/20;
+  }
+
+  .badge-navy {
+    @apply badge bg-navy/10 text-navy border border-navy/20;
+  }
+
+  .input-field {
+    @apply w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-text placeholder:text-text-muted focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition-all duration-200;
+    font-family: var(--font-tajawal), sans-serif;
+    direction: rtl;
+  }
+
+  .textarea-field {
+    @apply input-field resize-none min-h-[140px];
+  }
+
+  .label-field {
+    @apply block text-sm font-semibold text-navy mb-1.5;
+    font-family: var(--font-cairo), sans-serif;
+  }
+
+  .prose-arabic {
+    font-family: var(--font-tajawal), sans-serif;
+    line-height: 2;
+    font-size: 1.1rem;
+    color: #3E4652;
+  }
+
+  .divider-gold {
+    @apply w-16 h-1 bg-gradient-to-r from-gold to-gold-light rounded-full;
+  }
+
+  .page-hero {
+    @apply bg-navy text-white py-20 md:py-28 relative overflow-hidden;
+  }
+}
+
+/* Ticker animation */
+@keyframes ticker-scroll {
+  0% { transform: translateX(100vw); }
+  100% { transform: translateX(-100%); }
+}
+
+.ticker-text {
+  animation: ticker-scroll 45s linear infinite;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F5EFE3;
+}
+::-webkit-scrollbar-thumb {
+  background: #C99A3E;
+  border-radius: 3px;
+}
+
+/* Selection */
+::selection {
+  background-color: rgba(201, 154, 62, 0.2);
+  color: #0E1B2A;
+}
+
+/* RTL overrides */
+.ltr { direction: ltr; }
+.rtl { direction: rtl; }

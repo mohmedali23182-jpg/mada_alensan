@@ -1,0 +1,338 @@
+import "server-only";
+import { prisma } from "./prisma";
+import { uploadBufferToStorage } from "./storage";
+import { createPostRevision, ensurePostStats, estimateReadingTime, estimateWordCount, recordPostWorkflow, syncPostSeo } from "./editorial-db";
+
+type TelegramUser = { id: number; first_name?: string; username?: string };
+type TelegramPhoto = { file_id: string; file_unique_id: string; width: number; height: number; file_size?: number };
+type TelegramMessage = {
+  message_id: number;
+  chat: { id: number; type: string };
+  from?: TelegramUser;
+  text?: string;
+  caption?: string;
+  photo?: TelegramPhoto[];
+};
+export type TelegramUpdate = { update_id: number; message?: TelegramMessage };
+
+type DraftData = {
+  title?: string;
+  excerpt?: string;
+  content?: string;
+  authorName?: string;
+  contributorId?: string;
+  coverImage?: string;
+  categoryId?: string;
+  categoryName?: string;
+  scheduledAt?: string | null;
+};
+
+const botToken = process.env.TELEGRAM_BOT_TOKEN || "";
+const channelId = process.env.TELEGRAM_CHANNEL_ID || "";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
+function telegramApi(method: string) {
+  if (!botToken) throw new Error("TELEGRAM_BOT_TOKEN is missing");
+  return `https://api.telegram.org/bot${botToken}/${method}`;
+}
+
+export function isAllowedTelegramAdmin(id?: number | string) {
+  const admins = (process.env.TELEGRAM_ADMIN_IDS || "")
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean);
+  return Boolean(id && admins.includes(String(id)));
+}
+
+export async function sendTelegramMessage(chatId: string | number, text: string, options?: Record<string, unknown>) {
+  const res = await fetch(telegramApi("sendMessage"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML", disable_web_page_preview: false, ...options }),
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok || data?.ok === false) throw new Error(data?.description || "Telegram sendMessage failed");
+  return data;
+}
+
+async function sendTelegramPhoto(chatId: string | number, photo: string, caption: string) {
+  const res = await fetch(telegramApi("sendPhoto"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, photo, caption, parse_mode: "HTML" }),
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok || data?.ok === false) throw new Error(data?.description || "Telegram sendPhoto failed");
+  return data;
+}
+
+async function getTelegramFileUrl(fileId: string) {
+  const res = await fetch(telegramApi("getFile"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ file_id: fileId }),
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok || !data?.ok || !data.result?.file_path) throw new Error(data?.description || "Telegram getFile failed");
+  return `https://api.telegram.org/file/bot${botToken}/${data.result.file_path}`;
+}
+
+export function makeSlug(input: string) {
+  return input
+    .trim()
+    .toLowerCase()
+    .replace(/[\u064B-\u065F]/g, "")
+    .replace(/[^\p{L}\p{N}]+/gu, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80) || `post-${Date.now()}`;
+}
+
+
+async function uniquePostSlug(input: string) {
+  const base = makeSlug(input);
+  let slug = base;
+  let counter = 2;
+  while (await prisma.post.findUnique({ where: { slug }, select: { id: true } })) {
+    slug = `${base}-${counter++}`;
+  }
+  return slug;
+}
+
+function parseSchedule(text: string) {
+  const value = text.trim();
+  if (["الآن", "انشر", "نشر", "now", "publish"].includes(value.toLowerCase())) return null;
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})$/);
+  if (!match) throw new Error("اكتب الموعد بصيغة 2026-05-13 18:30 أو اكتب: الآن");
+  const [, y, m, d, hh, mm] = match;
+  // توقيت مكة = UTC+3، نحوله إلى UTC للحفظ في قاعدة البيانات.
+  return new Date(Date.UTC(Number(y), Number(m) - 1, Number(d), Number(hh) - 3, Number(mm))).toISOString();
+}
+
+function getText(message: TelegramMessage) {
+  return (message.text || message.caption || "").trim();
+}
+
+async function upsertDraft(chatId: string, step: string, data: DraftData) {
+  return prisma.telegramDraft.upsert({
+    where: { chatId },
+    update: { step: step as never, data: data as never },
+    create: { chatId, step: step as never, data: data as never },
+  });
+}
+
+async function getDraft(chatId: string) {
+  const draft = await prisma.telegramDraft.findUnique({ where: { chatId } });
+  return { step: draft?.step || "IDLE", data: (draft?.data || {}) as DraftData };
+}
+
+async function resetDraft(chatId: string) {
+  await prisma.telegramDraft.deleteMany({ where: { chatId } });
+}
+
+async function uploadTelegramPhoto(message: TelegramMessage) {
+  const best = message.photo?.slice().sort((a, b) => (b.file_size || 0) - (a.file_size || 0))[0];
+  if (!best) return null;
+  const fileUrl = await getTelegramFileUrl(best.file_id);
+  const response = await fetch(fileUrl);
+  if (!response.ok) throw new Error("تعذر تنزيل الصورة من تليجرام");
+  const arrayBuffer = await response.arrayBuffer();
+  const filename = `telegram-${Date.now()}.jpg`;
+  const uploaded = await uploadBufferToStorage(Buffer.from(arrayBuffer), filename, "image/jpeg", "telegram-covers");
+  return uploaded.url;
+}
+
+async function ensureContributor(name?: string) {
+  if (!name) return null;
+  const slug = makeSlug(name);
+  return prisma.contributor.upsert({
+    where: { slug },
+    update: { name, isActive: true },
+    create: { name, slug, bio: "كاتب عبر بوت تليجرام", isActive: true },
+  });
+}
+
+async function defaultCategory() {
+  const first = await prisma.category.findFirst({ where: { isActive: true }, orderBy: { order: "asc" } });
+  if (first) return first;
+  return prisma.category.create({ data: { name: "أقلام الناس", slug: "opinions", color: "#2F8F6B", icon: "PenTool", isActive: true } });
+}
+
+async function publishDraft(chatId: string, data: DraftData) {
+  if (!data.title || !data.content) throw new Error("المسودة ناقصة: العنوان أو المقال غير موجود.");
+  const contributor = await ensureContributor(data.authorName);
+  const category = data.categoryId ? await prisma.category.findUnique({ where: { id: data.categoryId } }) : await defaultCategory();
+  const scheduledAt = data.scheduledAt ? new Date(data.scheduledAt) : null;
+  const shouldPublishNow = !scheduledAt || scheduledAt.getTime() <= Date.now();
+  const slug = await uniquePostSlug(data.title);
+  const post = await prisma.post.create({
+    data: {
+      title: data.title,
+      slug,
+      excerpt: data.excerpt,
+      content: data.content,
+      coverImage: data.coverImage,
+      thumbnail: data.coverImage,
+      type: "CONTRIBUTOR_ARTICLE",
+      status: shouldPublishNow ? "PUBLISHED" : "SCHEDULED",
+      publishedAt: shouldPublishNow ? new Date() : null,
+      scheduledAt: scheduledAt,
+      contributorId: contributor?.id,
+      categoryId: category?.id,
+      seoTitle: data.title,
+      seoDescription: data.excerpt,
+      canonicalUrl: `${siteUrl.replace(/\/$/, "")}/articles/${slug}`,
+      readingTime: estimateReadingTime(data.content),
+      wordCount: estimateWordCount(data.content),
+    },
+  });
+  await syncPostSeo(prisma, post.id, post);
+  await ensurePostStats(prisma, post.id, post.viewsCount || 0);
+  await createPostRevision(prisma, { postId: post.id, title: post.title, excerpt: post.excerpt, content: post.content, changeNote: "إنشاء المقال عبر بوت تليجرام", snapshot: post });
+  await recordPostWorkflow(prisma, { postId: post.id, action: "CREATED", toStatus: post.status, note: "تم إنشاء المقال عبر بوت تليجرام" });
+  if (shouldPublishNow) await publishPostToTelegramChannel(post.id);
+  await resetDraft(chatId);
+  return post;
+}
+
+export async function publishPostToTelegramChannel(postId: string) {
+  if (!channelId) return { skipped: true, reason: "TELEGRAM_CHANNEL_ID is missing" };
+  const post = await prisma.post.findUnique({ where: { id: postId }, include: { contributor: true, category: true } });
+  if (!post || post.status !== "PUBLISHED") return { skipped: true, reason: "post not publishable" };
+  const alreadySent = await prisma.telegramPublishLog.findFirst({
+    where: { postId, status: "sent" },
+    select: { id: true, messageId: true },
+  });
+  if (alreadySent) return { skipped: true, reason: "already sent to Telegram", messageId: alreadySent.messageId };
+
+  const url = `${siteUrl.replace(/\/$/, "")}/articles/${post.slug}`;
+  const caption = [
+    `📰 <b>${escapeHtml(post.title)}</b>`,
+    post.excerpt ? `\n${escapeHtml(post.excerpt)}` : "",
+    post.contributor?.name ? `\n✍️ ${escapeHtml(post.contributor.name)}` : "\n✍️ فريق التحرير",
+    post.category?.name ? `\n🏷️ ${escapeHtml(post.category.name)}` : "",
+    `\n🔗 ${url}`,
+  ].join("");
+  try {
+    const result = post.coverImage ? await sendTelegramPhoto(channelId, post.coverImage, caption) : await sendTelegramMessage(channelId, caption);
+    const messageId = String(result?.result?.message_id || "");
+    await prisma.telegramPublishLog.create({ data: { postId, channelId, messageId, status: "sent" } });
+    return { ok: true, messageId };
+  } catch (error) {
+    await prisma.telegramPublishLog.create({ data: { postId, channelId, status: "failed", error: error instanceof Error ? error.message : "unknown" } });
+    throw error;
+  }
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+async function showCategories(chatId: string) {
+  const categories = await prisma.category.findMany({ where: { isActive: true }, orderBy: [{ order: "asc" }, { name: "asc" }], take: 20 });
+  const list = categories.map((c: any, i: number) => `${i + 1}. ${c.name}`).join("\n") || "لا توجد أقسام، اكتب أي اسم وسأنشئه.";
+  await sendTelegramMessage(chatId, `اختر التصنيف بإرسال رقمه أو اسمه:\n\n${list}`);
+}
+
+export async function handleTelegramUpdate(update: TelegramUpdate) {
+  const message = update.message;
+  if (!message) return { ok: true };
+  const chatId = String(message.chat.id);
+  const fromId = message.from?.id;
+  if (!isAllowedTelegramAdmin(fromId)) {
+    await sendTelegramMessage(chatId, "غير مصرح لهذا الحساب بإدارة المنصة.");
+    return { ok: false, status: 403 };
+  }
+
+  const text = getText(message);
+  if (["/start", "/help"].includes(text)) {
+    await sendTelegramMessage(chatId, "أهلًا بك في بوت إدارة مدى الناس.\n\nالأوامر:\n/newpost إنشاء مقال جديد\n/cancel إلغاء المسودة\n/status عرض المسودة الحالية\n/topics اقتراح مواضيع");
+    return { ok: true };
+  }
+  if (text === "/cancel") {
+    await resetDraft(chatId);
+    await sendTelegramMessage(chatId, "تم إلغاء المسودة الحالية.");
+    return { ok: true };
+  }
+  if (text === "/topics") {
+    await sendTelegramMessage(chatId, "اقتراحات مواضيع:\n1. يوميات أسرة بين المرض والفقر\n2. رسالة من قرية منسية\n3. طالب يواصل التعليم رغم النزوح\n4. ملف: علاج لا يصل إلى مستحقيه\n5. قصة كفاح أم تعيل أسرتها");
+    return { ok: true };
+  }
+  if (text === "/newpost") {
+    await upsertDraft(chatId, "TITLE", {});
+    await sendTelegramMessage(chatId, "لنبدأ مقالًا جديدًا.\nأرسل عنوان المقال.");
+    return { ok: true };
+  }
+
+  const draft = await getDraft(chatId);
+  const data = draft.data;
+
+  if (text === "/status") {
+    await sendTelegramMessage(chatId, `حالة المسودة: ${draft.step}\nالعنوان: ${data.title || "-"}\nالكاتب: ${data.authorName || "-"}\nالتصنيف: ${data.categoryName || data.categoryId || "-"}`);
+    return { ok: true };
+  }
+
+  if (draft.step === "TITLE") {
+    await upsertDraft(chatId, "EXCERPT", { ...data, title: text });
+    await sendTelegramMessage(chatId, "أرسل المقتطف المختصر للمقال.");
+    return { ok: true };
+  }
+  if (draft.step === "EXCERPT") {
+    await upsertDraft(chatId, "CONTENT", { ...data, excerpt: text });
+    await sendTelegramMessage(chatId, "أرسل نص المقال كاملًا.");
+    return { ok: true };
+  }
+  if (draft.step === "CONTENT") {
+    await upsertDraft(chatId, "AUTHOR", { ...data, content: text });
+    await sendTelegramMessage(chatId, "أرسل اسم الكاتب، أو اكتب: تخطي ليظهر باسم فريق التحرير.");
+    return { ok: true };
+  }
+  if (draft.step === "AUTHOR") {
+    const authorName = ["تخطي", "skip", "بدون"].includes(text.toLowerCase()) ? undefined : text;
+    await upsertDraft(chatId, "COVER", { ...data, authorName });
+    await sendTelegramMessage(chatId, "أرسل صورة الغلاف كصورة، أو أرسل رابط صورة، أو اكتب: تخطي");
+    return { ok: true };
+  }
+  if (draft.step === "COVER") {
+    let coverImage: string | undefined = data.coverImage ?? undefined;
+
+    if (message.photo?.length) {
+      const uploadedCoverImage = await uploadTelegramPhoto(message);
+      if (uploadedCoverImage) {
+        coverImage = uploadedCoverImage;
+      }
+    } else if (text && text !== "تخطي" && text.toLowerCase() !== "skip") {
+      coverImage = text;
+    }
+
+    await upsertDraft(chatId, "CATEGORY", { ...data, coverImage });
+    await showCategories(chatId);
+    return { ok: true };
+  }
+  if (draft.step === "CATEGORY") {
+    const categories = await prisma.category.findMany({ where: { isActive: true }, orderBy: [{ order: "asc" }, { name: "asc" }] });
+    const index = Number(text) - 1;
+    let category = Number.isInteger(index) && categories[index] ? categories[index] : categories.find((c: any) => c.name.trim() === text.trim());
+    if (!category && text) category = await prisma.category.create({ data: { name: text.trim(), slug: `${makeSlug(text)}-${Date.now().toString(36)}`, isActive: true } });
+    await upsertDraft(chatId, "SCHEDULE", { ...data, categoryId: category?.id, categoryName: category?.name });
+    await sendTelegramMessage(chatId, "متى ننشر؟\nاكتب: الآن\nأو موعد مكة بصيغة: 2026-05-13 18:30");
+    return { ok: true };
+  }
+  if (draft.step === "SCHEDULE") {
+    const scheduledAt = parseSchedule(text);
+    await upsertDraft(chatId, "CONFIRM", { ...data, scheduledAt });
+    await sendTelegramMessage(chatId, `راجع المسودة:\n\nالعنوان: ${data.title}\nالكاتب: ${data.authorName}\nالتصنيف: ${data.categoryName || "-"}\nالنشر: ${scheduledAt ? `مجدول ${text} بتوقيت مكة` : "الآن"}\n\nاكتب: تأكيد\nأو /cancel للإلغاء`);
+    return { ok: true };
+  }
+  if (draft.step === "CONFIRM") {
+    if (!["تأكيد", "confirm", "نعم"].includes(text.toLowerCase())) {
+      await sendTelegramMessage(chatId, "اكتب: تأكيد للنشر أو /cancel للإلغاء.");
+      return { ok: true };
+    }
+    const post = await publishDraft(chatId, data);
+    await sendTelegramMessage(chatId, post.status === "PUBLISHED" ? `تم نشر المقال: ${siteUrl}/articles/${post.slug}` : `تمت جدولة المقال للنشر لاحقًا: ${post.title}`);
+    return { ok: true };
+  }
+
+  await sendTelegramMessage(chatId, "اكتب /newpost لإنشاء مقال جديد أو /help للأوامر.");
+  return { ok: true };
+}
