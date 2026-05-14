@@ -4,8 +4,8 @@ import type { Article, Case, Author, ArticleCategory, CaseStatus as UiCaseStatus
 
 export const dynamic = "force-dynamic";
 
-const fallbackImage = "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1200&q=80";
-const fallbackAvatar = "https://i.pravatar.cc/150?img=60";
+const fallbackImage = "/images/placeholder-cover.svg";
+const fallbackAvatar = "";
 
 function logContentError(scope: string, error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
@@ -56,9 +56,9 @@ function authorFromPost(post: PostWithRelations): Author {
     id: contributor?.id || user?.id || "editorial-team",
     slug: contributor?.slug || undefined,
     name: contributor?.name || user?.name || "هيئة التحرير",
-    avatar: contributor?.avatarUrl || user?.avatarUrl || fallbackAvatar,
-    bio: contributor?.bio || "كاتب في منصة مدى الناس.",
-    role: contributor ? "كاتب مشارك" : user?.role ? "فريق التحرير" : "هيئة التحرير",
+    avatar: contributor?.avatarUrl || user?.avatarUrl || fallbackAvatar || undefined,
+    bio: contributor?.bio || "كاتب في منصة إنسانية، فكرية، ثقافية.",
+    role: contributor?.bio ? undefined : user?.role ? "فريق التحرير" : undefined,
   };
 }
 
@@ -175,7 +175,7 @@ export async function getCaseBySlugFromDb(slug: string) {
 export async function getContributorsFromDb(limit = 12) {
   return safeQuery("contributors", async () => {
     const contributors = await prisma.contributor.findMany({ where: { isActive: true }, include: { _count: { select: { posts: true } } }, orderBy: { createdAt: "desc" }, take: limit });
-    return contributors.map((item: any): Author => ({ id: item.id, slug: item.slug, name: item.name, avatar: item.avatarUrl || fallbackAvatar, bio: item.bio || "كاتب مشارك في مدى الناس.", role: "كاتب مشارك", articlesCount: item._count.posts, social: { facebook: item.facebookUrl || undefined, instagram: item.instagramUrl || undefined, twitter: item.xUrl || undefined, whatsapp: item.whatsappUrl || undefined, telegram: item.telegramUrl || undefined, youtube: item.youtubeUrl || undefined, website: item.websiteUrl || undefined } }));
+    return contributors.map((item: any): Author => ({ id: item.id, slug: item.slug, name: item.name, avatar: item.avatarUrl || undefined, bio: item.bio || "كاتب في منصة إنسانية، فكرية، ثقافية.", role: undefined, articlesCount: item._count.posts, social: { facebook: item.facebookUrl || undefined, instagram: item.instagramUrl || undefined, twitter: item.xUrl || undefined, whatsapp: item.whatsappUrl || undefined, telegram: item.telegramUrl || undefined, youtube: item.youtubeUrl || undefined, website: item.websiteUrl || undefined } }));
   }, [] as Author[]);
 }
 

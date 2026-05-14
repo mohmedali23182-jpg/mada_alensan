@@ -18,7 +18,7 @@ export const categorySchema = z.object({
 export const contributorSchema = z.object({
   name: z.string().min(2, "اسم الكاتب مطلوب"),
   slug: z.string().min(2, "الرابط المختصر مطلوب").regex(/^[a-z0-9-]+$/),
-  email: z.string().email().optional().or(z.literal("")),
+  email: z.string().email("البريد الإلكتروني غير صحيح").optional().or(z.literal("")),
   phone: z.string().optional(),
   bio: z.string().optional(),
   avatarUrl: z.string().url().optional().or(z.literal("")),
@@ -64,17 +64,17 @@ export const articleSubmissionSchema = z.object({
 export const storySubmissionSchema = z.object({
   fullName: z.string().optional(),
   phone: z.string().optional(),
-  email: z.string().email().optional().or(z.literal("")),
+  email: z.string().email("البريد الإلكتروني غير صحيح").optional().or(z.literal("")),
   isAnonymous: z.coerce.boolean().default(false),
-  title: z.string().optional(),
-  body: z.string().min(20),
+  title: z.string().min(4, "عنوان القصة مطلوب"),
+  body: z.string().min(20, "تفاصيل القصة يجب أن تكون أوضح"),
   allowPublish: z.coerce.boolean().default(false),
 });
 
 export const caseReportSchema = z.object({
   fullName: z.string().optional(),
   phone: z.string().optional(),
-  email: z.string().email().optional().or(z.literal("")),
+  email: z.string().email("البريد الإلكتروني غير صحيح").optional().or(z.literal("")),
   title: z.string().min(4),
   body: z.string().min(20),
   caseType: z.string().optional(),
@@ -83,7 +83,7 @@ export const caseReportSchema = z.object({
 
 export const contactSchema = z.object({
   name: z.string().min(2),
-  email: z.string().email().optional().or(z.literal("")),
+  email: z.string().email("البريد الإلكتروني غير صحيح").optional().or(z.literal("")),
   phone: z.string().optional(),
   subject: z.string().optional(),
   message: z.string().min(10),

@@ -52,7 +52,7 @@ supabase/02-create-storage-bucket.sql
 وتأكد أن متغير البيئة هو:
 
 ```env
-SUPABASE_STORAGE_BUCKET=mada-media
+SUPABASE_STORAGE_BUCKET=media
 ```
 
 ### 4. فحص القاعدة

@@ -16,7 +16,7 @@ const iconMap: Record<string, ElementType> = {
 };
 
 const CONTACT_ITEMS = [
-  { icon: Mail, label: "البريد الإلكتروني", value: "info@madaalinsan.com", href: "mailto:info@madaalinsan.com", color: "#C99A3E" },
+  { icon: Mail, label: "البريد الإلكتروني", value: "mtzallqmy@gmail.com", href: "mailto:mtzallqmy@gmail.com", color: "#C99A3E" },
   { icon: MessageCircle, label: "واتساب", value: "للتواصل السريع", href: "https://wa.me/967xxxxxxxxx", color: "#25D366" },
   { icon: Send, label: "تليجرام", value: "@madaalinsan", href: "https://t.me/madaalinsan", color: "#2AABEE" },
 ];

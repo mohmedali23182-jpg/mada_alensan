@@ -1,31 +1,49 @@
--- Create Supabase Storage bucket used by the media uploader.
--- Run after project setup if the bucket does not exist.
+-- Creates/repairs the Supabase Storage bucket used by the CMS media uploader.
+-- Run in Supabase SQL Editor if the admin uploader says: Bucket not found.
 
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+insert into storage.buckets (
+  id,
+  name,
+  public,
+  file_size_limit,
+  allowed_mime_types
+)
 values (
-  'mada-media',
-  'mada-media',
+  'media',
+  'media',
   true,
   52428800,
-  array['image/png','image/jpeg','image/webp','image/gif','image/svg+xml','video/mp4','audio/mpeg','audio/mp4','application/pdf']
+  array[
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'image/gif',
+    'video/mp4',
+    'audio/mpeg',
+    'audio/mp4',
+    'audio/wav',
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  ]
 )
-on conflict (id) do update set
-  public = excluded.public,
+on conflict (id) do update
+set
+  public = true,
   file_size_limit = excluded.file_size_limit,
   allowed_mime_types = excluded.allowed_mime_types;
 
--- Public read policy for media files.
 do $$
 begin
   if not exists (
     select 1 from pg_policies
     where schemaname = 'storage'
       and tablename = 'objects'
-      and policyname = 'mada_media_public_read'
+      and policyname = 'Public read media files'
   ) then
-    create policy "mada_media_public_read"
+    create policy "Public read media files"
     on storage.objects
     for select
-    using (bucket_id = 'mada-media');
+    using (bucket_id = 'media');
   end if;
 end $$;

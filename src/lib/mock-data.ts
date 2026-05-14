@@ -7,35 +7,35 @@ export const AUTHORS: Author[] = [
   {
     id: "1",
     name: "أحمد المنصوري",
-    avatar: "https://i.pravatar.cc/150?img=11",
+    avatar: undefined,
     bio: "صحفي مستقل متخصص في الشأن الإنساني وقضايا النزوح، يعمل في تغطية أوضاع اللاجئين منذ أكثر من عشر سنوات.",
     role: "محرر",
   },
   {
     id: "2",
     name: "سارة الزهراني",
-    avatar: "https://i.pravatar.cc/150?img=47",
+    avatar: undefined,
     bio: "كاتبة وباحثة اجتماعية، تُعنى بقضايا المرأة والطفولة والتعليم في المجتمعات المهمشة.",
     role: "كاتبة مشاركة",
   },
   {
     id: "3",
     name: "خالد البريكي",
-    avatar: "https://i.pravatar.cc/150?img=33",
+    avatar: undefined,
     bio: "ناشط حقوقي وكاتب يوثّق حالات الفقر والحرمان، ويسعى لإيصال أصوات المهمشين إلى صانعي القرار.",
-    role: "كاتب مشارك",
+    role: undefined,
   },
   {
     id: "4",
     name: "نورة العتيبي",
-    avatar: "https://i.pravatar.cc/150?img=45",
+    avatar: undefined,
     bio: "معلمة وكاتبة، تؤمن بأن التعليم هو الطريق الوحيد لكسر حلقات الفقر المتوارثة.",
     role: "كاتبة مشاركة",
   },
   {
     id: "5",
     name: "هيئة التحرير",
-    avatar: "https://i.pravatar.cc/150?img=60",
+    avatar: undefined,
     bio: "فريق التحرير في مدى الناس.",
     role: "هيئة التحرير",
   },
@@ -62,7 +62,7 @@ export const ARTICLES: Article[] = [
 أكبر أبنائها في الثانية عشرة، يساعدها في عمل البيت. الصغيرة لم تتجاوز الثلاث سنوات. بينهم أطفال يحملون في عيونهم سؤالاً لا يُجيب عليه أحد: "متى يتحسن الحال؟"
 
 لكن أم خالد لا تنتظر. هي تزرع، وتأمل، وتُصلي.`,
-    coverImage: "https://images.unsplash.com/photo-1509099836639-18ba1795216d?w=1200&q=80",
+    coverImage: "/images/placeholder-cover.svg",
     category: "stories",
     author: AUTHORS[0],
     publishedAt: "2026-05-08",
@@ -83,7 +83,7 @@ export const ARTICLES: Article[] = [
 "نحن لا نطلب الكثير"، يقول المعلم محمد. "نريد فقط أن يتعلم هؤلاء الأطفال بكرامة."
 
 أولياء الأمور يتبرعون بما يملكون. بعضهم يحضر ألواحاً خشبية، وآخرون يجلبون كراسي مكسورة. لكن المبنى يحتاج إلى ترميم شامل لا تملك القرية ثمنه.`,
-    coverImage: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=1200&q=80",
+    coverImage: "/images/placeholder-cover.svg",
     category: "news",
     author: AUTHORS[1],
     publishedAt: "2026-05-06",
@@ -104,7 +104,7 @@ export const ARTICLES: Article[] = [
 اليوم، بعد عامين، يعيشون في غرفة واحدة في حي شعبي. لكن أبو يوسف فتح محل بقالة صغيراً، وزوجته تُعلّم الأطفال في المنزل، وأكبر أبنائه يعمل بعد الدراسة.
 
 "نحن هنا نبني من الصفر"، يقول بفخر هادئ. "لكننا لم نكسر."`,
-    coverImage: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1200&q=80",
+    coverImage: "/images/placeholder-cover.svg",
     category: "life",
     author: AUTHORS[2],
     publishedAt: "2026-05-04",
@@ -129,7 +129,7 @@ export const ARTICLES: Article[] = [
 أسألكم سؤالاً واحداً: كم تستحق حياة إنسان؟
 
 أم فهد`,
-    coverImage: "https://images.unsplash.com/photo-1516627145497-ae6968895b74?w=1200&q=80",
+    coverImage: "/images/placeholder-cover.svg",
     category: "letters",
     author: AUTHORS[3],
     publishedAt: "2026-05-02",
@@ -152,7 +152,7 @@ export const ARTICLES: Article[] = [
 "الفقر ليس عاراً"، يقول وهو يرتب البضاعة. "العار أن تستسلم له."
 
 يحلم محمد بتوسيع مشروعه وفتح فرع ثانٍ. لكن أهم ما يريده هو إثبات أن ابن الحي يستطيع.`,
-    coverImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&q=80",
+    coverImage: "/images/placeholder-cover.svg",
     category: "stories",
     author: AUTHORS[0],
     publishedAt: "2026-04-30",
@@ -171,7 +171,7 @@ export const ARTICLES: Article[] = [
 لكن الحقيقة أن التعليم هو الاستثمار الأكثر ضماناً في المستقبل.
 
 تحدثنا مع عشرين أسرة في ثلاث مناطق مختلفة. نتائج هذا التحقيق تُلقي الضوء على الأسباب الحقيقية وتقترح حلولاً يمكن تطبيقها بموارد محدودة.`,
-    coverImage: "https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=1200&q=80",
+    coverImage: "/images/placeholder-cover.svg",
     category: "opinions",
     author: AUTHORS[1],
     publishedAt: "2026-04-28",
@@ -208,7 +208,7 @@ export const CASES: Case[] = [
       { id: "t2", date: "2026-04-20", title: "التحقق الميداني", description: "زيارة ميدانية وتوثيق الأوضاع بالصور.", status: "under-review" },
       { id: "t3", date: "2026-05-01", title: "رفع البلاغ الرسمي", description: "تم رفع البلاغ إلى الجهات المعنية وانتظار الرد.", status: "in-progress" },
     ],
-    coverImage: "https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=800&q=80",
+    coverImage: "/images/placeholder-cover.svg",
   },
   {
     id: "2",
@@ -233,7 +233,7 @@ export const CASES: Case[] = [
       { id: "t2", date: "2026-04-28", title: "التحقق الطبي", description: "تم الحصول على التقارير الطبية والتحقق منها.", status: "under-review" },
       { id: "t3", date: "2026-05-02", title: "التواصل مع الجهات الخيرية", description: "تم إرسال القضية لعشر جهات خيرية وننتظر الرد.", status: "in-progress" },
     ],
-    coverImage: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&q=80",
+    coverImage: "/images/placeholder-cover.svg",
   },
   {
     id: "3",
@@ -250,7 +250,7 @@ export const CASES: Case[] = [
       { id: "t1", date: "2026-04-18", title: "رصد القضية", description: "وردتنا معلومات عن تسرب جماعي." },
       { id: "t2", date: "2026-04-28", title: "تحقيق ميداني", description: "فريقنا في الطريق للتحقق الميداني.", status: "under-review" },
     ],
-    coverImage: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80",
+    coverImage: "/images/placeholder-cover.svg",
   },
   {
     id: "4",
@@ -268,7 +268,7 @@ export const CASES: Case[] = [
       { id: "t2", date: "2026-04-10", title: "زيارة ميدانية", description: "تحقق الفريق من الأوضاع." },
       { id: "t3", date: "2026-04-20", title: "تم الحل ✓", description: "تمكنا بمساعدة جمعية خيرية من تأمين مسكن بديل لها.", status: "resolved" },
     ],
-    coverImage: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&q=80",
+    coverImage: "/images/placeholder-cover.svg",
   },
 ];
 

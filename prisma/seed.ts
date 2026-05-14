@@ -32,7 +32,7 @@ async function main() {
   const organization = await prisma.organization.upsert({
     where: { slug: "mada-alinsan" },
     update: { name: "مدى الناس", locale: "ar-YE", timezone: "Asia/Aden" },
-    create: { name: "مدى الناس", slug: "mada-alinsan", description: "منصة تحريرية إنسانية عربية", locale: "ar-YE", timezone: "Asia/Aden" },
+    create: { name: "مدى الناس", slug: "mada-alinsan", description: "منصة إنسانية، فكرية، ثقافية عربية", locale: "ar-YE", timezone: "Asia/Aden" },
   });
 
   const adminEmail = process.env.ADMIN_EMAIL || "admin@madannas.org";
@@ -105,8 +105,8 @@ async function main() {
 
   await prisma.siteSetting.upsert({
     where: { key: "seo_defaults" },
-    update: { value: { defaultTitle: "مدى الناس", defaultDescription: "منصة تحريرية إنسانية عربية", defaultOgImage: null, enableStructuredData: true }, group: "seo", type: "json", isPublic: true, organizationId: organization.id },
-    create: { key: "seo_defaults", value: { defaultTitle: "مدى الناس", defaultDescription: "منصة تحريرية إنسانية عربية", defaultOgImage: null, enableStructuredData: true }, group: "seo", type: "json", isPublic: true, organizationId: organization.id },
+    update: { value: { defaultTitle: "مدى الناس", defaultDescription: "منصة إنسانية، فكرية، ثقافية عربية", defaultOgImage: null, enableStructuredData: true }, group: "seo", type: "json", isPublic: true, organizationId: organization.id },
+    create: { key: "seo_defaults", value: { defaultTitle: "مدى الناس", defaultDescription: "منصة إنسانية، فكرية، ثقافية عربية", defaultOgImage: null, enableStructuredData: true }, group: "seo", type: "json", isPublic: true, organizationId: organization.id },
   });
 
   console.log("Seed completed. Admins:", adminEmail, "mtzallqmy@gmail.com");

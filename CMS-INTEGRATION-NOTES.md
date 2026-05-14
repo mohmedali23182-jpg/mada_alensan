@@ -19,7 +19,7 @@
 ## ما يحتاج ضبطًا قبل النشر
 
 1. إنشاء مشروع Supabase.
-2. إنشاء bucket باسم `mada-media` أو تعديل `SUPABASE_STORAGE_BUCKET`.
+2. إنشاء bucket باسم `media` أو تعديل `SUPABASE_STORAGE_BUCKET`.
 3. وضع متغيرات البيئة في Vercel.
 4. تشغيل migrate و seed.
 5. مراجعة الصلاحيات وربط صفحات الإدارة ببيانات حقيقية بدل بعض جداول mock.

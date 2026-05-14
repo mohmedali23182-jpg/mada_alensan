@@ -34,7 +34,7 @@ export default function HeroSection({ stats }: { stats?: HeroStats }) {
         <div className="max-w-3xl">
           <div className="inline-flex items-center gap-2 bg-gold/15 border border-gold/30 text-gold px-4 py-2 rounded-full text-sm font-semibold font-cairo mb-8">
             <span className="w-2 h-2 rounded-full bg-gold animate-pulse" />
-            منصة إنسانية عربية مستقلة
+            منصة إنسانية، فكرية، ثقافية مستقلة
           </div>
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-cairo text-white leading-[1.3] mb-6">

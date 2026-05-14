@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { AdminSection, StatusBadge } from "@/components/admin/AdminCards";
 import { MediaUploadInput } from "@/components/admin/MediaUploadInput";
 import { SubmitButton } from "@/components/admin/SubmitButton";
@@ -133,6 +134,7 @@ async function savePost(formData: FormData) {
   revalidatePath("/admin");
   revalidatePath("/");
   revalidatePath(`/articles/${post.slug}`);
+  redirect(shouldPublish ? `/articles/${post.slug}` : "/admin/articles?saved=1");
 }
 
 async function setPostStatus(formData: FormData) {
@@ -151,9 +153,10 @@ async function setPostStatus(formData: FormData) {
   revalidatePath("/admin/articles");
   revalidatePath("/admin");
   revalidatePath("/");
+  redirect(String(status) === "PUBLISHED" ? "/admin/articles?published=1" : "/admin/articles?updated=1");
 }
 
-export default async function AdminArticlesPage() {
+export default async function AdminArticlesPage({ searchParams }: { searchParams?: Record<string, string | string[] | undefined> }) {
   const posts = await safeAdminQuery(
     "articles-list",
     () => prisma.post.findMany({
@@ -183,8 +186,11 @@ export default async function AdminArticlesPage() {
     [] as Array<any>,
   );
 
+  const notice = searchParams?.published ? "تم نشر المقال بنجاح." : searchParams?.saved ? "تم حفظ المقال بنجاح." : searchParams?.updated ? "تم تحديث حالة المقال." : searchParams?.converted ? "تم تحويل القصة إلى مقال للمراجعة." : "";
+
   return (
     <div className="space-y-6">
+      {notice ? <div className="rounded-2xl bg-hope/10 p-4 text-sm font-bold text-hope">{notice}</div> : null}
       <AdminSection title="محرر المقالات" description="إضافة مقال كامل مع غلاف، تصنيف، جدولة، وSEO. كل مقال منشور يحصل على رابط /articles/slug.">
         <form action={savePost} className="grid gap-4 xl:grid-cols-3">
           <div className="xl:col-span-2 space-y-3">

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Camera, Globe } from "lucide-react";
+import { Camera, Globe, UserRound } from "lucide-react";
 import type { Author } from "@/lib/types";
 
 interface AuthorCardProps {
@@ -22,8 +22,8 @@ export default function AuthorCard({ author, articleCount, compact = false }: Au
             className="rounded-full object-cover ring-2 ring-gold/30"
           />
         ) : (
-          <div className="w-10 h-10 rounded-full bg-navy/10 flex items-center justify-center text-navy font-bold font-cairo text-sm">
-            {author.name[0]}
+          <div className="w-10 h-10 rounded-full bg-navy/10 flex items-center justify-center text-navy" aria-hidden="true">
+            <UserRound size={19} />
           </div>
         )}
         <div>
@@ -47,8 +47,8 @@ export default function AuthorCard({ author, articleCount, compact = false }: Au
           className="rounded-full object-cover ring-4 ring-gold/20"
         />
       ) : (
-        <div className="w-20 h-20 rounded-full bg-navy flex items-center justify-center text-white font-bold font-cairo text-2xl">
-          {author.name[0]}
+        <div className="w-20 h-20 rounded-full bg-navy/10 flex items-center justify-center text-navy ring-4 ring-gold/10" aria-hidden="true">
+          <UserRound size={38} />
         </div>
       )}
       <div>

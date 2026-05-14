@@ -20,7 +20,7 @@
 2. لا ترفع `.env` إلى GitHub.
 3. استخدم Supabase Pooler في `DATABASE_URL` على Vercel.
 4. استخدم `DIRECT_URL` للاتصال المباشر الخاص بالـ migrations/db push.
-5. أنشئ bucket باسم `mada-media` في Supabase Storage.
+5. أنشئ bucket باسم `media` في Supabase Storage.
 6. شغّل:
 
 ```bash

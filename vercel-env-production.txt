@@ -13,11 +13,11 @@ TELEGRAM_WEBHOOK_SECRET=madaalinsan_telegram_webhook_secret_2026_8185788415
 
 NEXT_PUBLIC_APP_URL=https://mada-alensan.vercel.app
 NEXT_PUBLIC_SITE_URL=https://mada-alensan.vercel.app
-NEXT_PUBLIC_SITE_NAME=مدى الناس
+NEXT_PUBLIC_SITE_NAME=مدى الإنسان
 
 # Database & Storage (Supabase)
 NEXT_PUBLIC_SUPABASE_URL=https://wsqygwnyhnuhskeohjbk.supabase.co
-SUPABASE_STORAGE_BUCKET=mada-media
-NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET=mada-media
+SUPABASE_STORAGE_BUCKET=media
+NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET=media
 
 # Important: Make sure DATABASE_URL and DIRECT_URL are also set correctly in Vercel.

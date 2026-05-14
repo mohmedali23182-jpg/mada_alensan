@@ -93,11 +93,11 @@ export default function Footer() {
             </h4>
             <div className="space-y-3 mb-5">
               <a
-                href="mailto:info@madaalinsan.com"
+                href="mailto:mtzallqmy@gmail.com"
                 className="flex items-center gap-2 text-ivory/60 hover:text-gold transition-colors text-sm font-tajawal"
               >
                 <Mail size={14} className="text-gold" />
-                info@madaalinsan.com
+                mtzallqmy@gmail.com
               </a>
             </div>
             <div className="flex flex-wrap gap-2">

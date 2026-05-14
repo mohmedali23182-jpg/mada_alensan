@@ -72,7 +72,7 @@ export const SOCIAL_LINKS: SocialPlatform[] = [
     id: "email",
     name: "email",
     label: "البريد الإلكتروني",
-    url: "mailto:info@madaalinsan.com",
+    url: "mailto:mtzallqmy@gmail.com",
     color: "#C99A3E",
     bgColor: "#FDF6E8",
     icon: "Mail",

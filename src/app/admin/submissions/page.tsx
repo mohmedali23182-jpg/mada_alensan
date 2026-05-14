@@ -1,4 +1,5 @@
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { AdminSection, StatusBadge } from "@/components/admin/AdminCards";
 import { SubmitButton } from "@/components/admin/SubmitButton";
@@ -11,7 +12,7 @@ import { createPostRevision, ensurePostStats, estimateReadingTime, estimateWordC
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const submissionStatuses = ["SUBMITTED", "UNDER_REVIEW", "NEEDS_INFO", "APPROVED", "PUBLISHED", "REJECTED", "ARCHIVED"] as const;
+const submissionStatuses = ["SUBMITTED", "UNDER_REVIEW", "NEEDS_INFO", "APPROVED", "PUBLISHED", "CONVERTED_TO_POST", "REJECTED", "ARCHIVED"] as const;
 
 function normalizeSubmissionStatus(value: FormDataEntryValue | null) {
   const status = String(value || "SUBMITTED");
@@ -72,9 +73,10 @@ async function convertSubmissionToPost(formData: FormData) {
   await ensurePostStats(prisma, post.id, 0);
   await createPostRevision(prisma, { postId: post.id, title: post.title, excerpt: post.excerpt, content: post.content, changeNote: "تحويل وارد إلى مسودة مراجعة", snapshot: post });
   await recordPostWorkflow(prisma, { postId: post.id, action: "CREATED", toStatus: "REVIEW", note: `تم التحويل من الوارد ${submission.id}` });
-  await prisma.submission.update({ where: { id }, data: { status: "PUBLISHED" as never, reviewNotes: `حوّل إلى مقال: ${post.slug}` } });
+  await prisma.submission.update({ where: { id }, data: { status: "CONVERTED_TO_POST" as never, convertedPostId: post.id, reviewNotes: `حوّل إلى مقال: ${post.slug}` } });
   revalidatePath("/admin/submissions");
   revalidatePath("/admin/articles");
+  redirect(`/admin/articles?converted=${post.id}`);
 }
 
 async function updateContactStatus(formData: FormData) {
