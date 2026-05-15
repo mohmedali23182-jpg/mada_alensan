@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Mail, Send, MessageCircle, CheckCircle, Globe, Camera, Video, AlertCircle } from "lucide-react";
 import type { ElementType } from "react";
 import { SOCIAL_LINKS } from "@/lib/social-links";
+import { readJsonResponse } from "@/lib/http-json";
 
 const iconMap: Record<string, ElementType> = {
   Facebook: Globe,
@@ -34,7 +35,7 @@ export default function ContactClient() {
     const formData = new FormData(e.currentTarget);
     try {
       const res = await fetch("/api/contact", { method: "POST", body: formData });
-      const data = (await res.json()) as { ok?: boolean; message?: string };
+      const data = await readJsonResponse(res);
       if (!res.ok || !data.ok) throw new Error(data.message || "تعذر إرسال الرسالة");
       setState("success");
       e.currentTarget.reset();

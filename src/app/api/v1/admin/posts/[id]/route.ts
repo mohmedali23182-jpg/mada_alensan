@@ -8,7 +8,7 @@ import { createPostRevision, ensurePostStats, estimateReadingTime, estimateWordC
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-async function uniqueSlug(input: string, currentId?: string) {
+async function uniqueSlug(input: string, currentId: string) {
   const base = makeSlug(input);
   let slug = base;
   let counter = 2;
@@ -19,34 +19,30 @@ async function uniqueSlug(input: string, currentId?: string) {
   }
 }
 
-export async function GET(request: Request) {
+export async function GET(request: Request, { params }: { params: { id: string } }) {
   const { response } = await requireBearerPermission(request, "posts:update");
   if (response) return response;
-  const items = await prisma.post.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 100,
-    include: { category: true, contributor: true, author: { select: { id: true, name: true, email: true } } },
-  });
-  return NextResponse.json({ ok: true, items });
+  const item = await prisma.post.findUnique({ where: { id: params.id }, include: { category: true, contributor: true, author: { select: { id: true, name: true, email: true } } } });
+  if (!item) return NextResponse.json({ ok: false, message: "المقال غير موجود" }, { status: 404 });
+  return NextResponse.json({ ok: true, item });
 }
 
-export async function POST(request: Request) {
-  const { user, response } = await requireBearerPermission(request, "posts:create");
+export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+  const { user, response } = await requireBearerPermission(request, "posts:update");
   if (response) return response;
-  if (!user) return NextResponse.json({ ok: false, message: "غير مصرح" }, { status: 401 });
-
   try {
     const body = await request.json().catch(() => null);
-    const parsed = postSchema.safeParse(body);
+    const current = await prisma.post.findUnique({ where: { id: params.id }, select: { id: true, title: true, content: true, status: true, publishedAt: true } });
+    if (!current) return NextResponse.json({ ok: false, message: "المقال غير موجود" }, { status: 404 });
+
+    const merged = { ...body, title: body?.title || current.title, content: body?.content || current.content };
+    const parsed = postSchema.safeParse(merged);
     if (!parsed.success) return NextResponse.json({ ok: false, message: "بيانات المقال غير مكتملة", errors: parsed.error.flatten() }, { status: 400 });
 
     const data = parsed.data;
-    const id = typeof body?.id === "string" ? body.id : undefined;
-    const slug = await uniqueSlug(data.slug || data.title, id);
+    const slug = await uniqueSlug(data.slug || data.title, params.id);
     const now = new Date();
     const scheduledAt = data.scheduledAt ? new Date(data.scheduledAt) : null;
-    const previous = id ? await prisma.post.findUnique({ where: { id }, select: { status: true, publishedAt: true } }) : null;
-
     const writeData = {
       title: data.title,
       slug,
@@ -67,21 +63,16 @@ export async function POST(request: Request) {
       country: data.country || "اليمن",
       scheduledAt,
       approvedAt: data.status === "APPROVED" || data.status === "PUBLISHED" ? now : null,
-      publishedAt: data.status === "PUBLISHED" ? (previous?.publishedAt || now) : null,
+      publishedAt: data.status === "PUBLISHED" ? (current.publishedAt || now) : null,
     };
-
-    const item = id
-      ? await prisma.post.update({ where: { id }, data: writeData })
-      : await prisma.post.create({ data: { ...writeData, authorId: user.id } });
-
+    const item = await prisma.post.update({ where: { id: params.id }, data: writeData });
     await syncPostSeo(prisma, item.id, writeData);
     await ensurePostStats(prisma, item.id, item.viewsCount || 0);
-    await createPostRevision(prisma, { postId: item.id, title: item.title, excerpt: item.excerpt, content: item.content, editorId: user.id, changeNote: id ? "تحديث عبر تطبيق API" : "إنشاء عبر تطبيق API", snapshot: writeData });
-    await recordPostWorkflow(prisma, { postId: item.id, actorId: user.id, action: id ? "UPDATED" : "CREATED", fromStatus: previous?.status || null, toStatus: data.status });
-
+    await createPostRevision(prisma, { postId: item.id, title: item.title, excerpt: item.excerpt, content: item.content, editorId: user?.id, changeNote: "تحديث عبر تطبيق API", snapshot: writeData });
+    await recordPostWorkflow(prisma, { postId: item.id, actorId: user?.id, action: "UPDATED", fromStatus: current.status, toStatus: data.status });
     return NextResponse.json({ ok: true, item, url: `/articles/${item.slug}` });
   } catch (error) {
-    console.error("[api:v1:admin:posts]", error);
-    return NextResponse.json({ ok: false, message: "تعذر حفظ المقال" }, { status: 500 });
+    console.error("[api:v1:admin:posts:id]", error);
+    return NextResponse.json({ ok: false, message: "تعذر تحديث المقال" }, { status: 500 });
   }
 }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Send, CheckCircle, Upload, AlertCircle } from "lucide-react";
+import { readJsonResponse } from "@/lib/http-json";
 
 type FormState = "idle" | "loading" | "success" | "error";
 
@@ -18,7 +19,7 @@ export default function WriteForm() {
     formData.set("allowPublish", String(publishWithName));
     try {
       const res = await fetch("/api/submissions/article", { method: "POST", body: formData });
-      const data = (await res.json()) as { ok?: boolean; message?: string };
+      const data = await readJsonResponse(res);
       if (!res.ok || !data.ok) throw new Error(data.message || "تعذر إرسال المقال");
       setState("success");
       e.currentTarget.reset();

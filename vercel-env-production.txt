@@ -21,3 +21,5 @@ SUPABASE_STORAGE_BUCKET=media
 NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET=media
 
 # Important: Make sure DATABASE_URL and DIRECT_URL are also set correctly in Vercel.
+
+ADMIN_NOTIFICATION_EMAIL=mtzallqmy@gmail.com
