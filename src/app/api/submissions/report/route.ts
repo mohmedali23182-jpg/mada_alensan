@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
   await notifyAdmin({
     subject: `بلاغ حالة جديد: ${parsed.data.title}`,
-    title: "وصل بلاغ حالة جديد إلى مدى الناس",
+    title: "وصل بلاغ حالة جديد إلى مدى الإنسان",
     entity: "Submission",
     entityId: item.id,
     lines: [

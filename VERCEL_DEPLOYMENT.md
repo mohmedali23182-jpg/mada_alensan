@@ -1,4 +1,4 @@
-# نشر مدى الناس على Vercel + Supabase
+# نشر مدى الإنسان على Vercel + Supabase
 
 ## 1. متغيرات البيئة المطلوبة في Vercel
 

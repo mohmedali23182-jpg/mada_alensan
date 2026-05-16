@@ -12,11 +12,12 @@ export type Permission =
   | "submissions:manage"
   | "media:manage"
   | "users:manage"
-  | "settings:manage";
+  | "settings:manage"
+  | "notifications:manage";
 
 const rolePermissions: Record<CmsRole, Permission[]> = {
-  OWNER: ["dashboard:read", "posts:create", "posts:update", "posts:publish", "posts:delete", "categories:manage", "contributors:manage", "cases:manage", "submissions:manage", "media:manage", "users:manage", "settings:manage"],
-  ADMIN: ["dashboard:read", "posts:create", "posts:update", "posts:publish", "posts:delete", "categories:manage", "contributors:manage", "cases:manage", "submissions:manage", "media:manage", "users:manage", "settings:manage"],
+  OWNER: ["dashboard:read", "posts:create", "posts:update", "posts:publish", "posts:delete", "categories:manage", "contributors:manage", "cases:manage", "submissions:manage", "media:manage", "users:manage", "settings:manage", "notifications:manage"],
+  ADMIN: ["dashboard:read", "posts:create", "posts:update", "posts:publish", "posts:delete", "categories:manage", "contributors:manage", "cases:manage", "submissions:manage", "media:manage", "users:manage", "settings:manage", "notifications:manage"],
   EDITOR: ["dashboard:read", "posts:create", "posts:update", "submissions:manage", "media:manage"],
   REVIEWER: ["dashboard:read", "posts:update", "posts:publish", "submissions:manage"],
   AUTHOR: ["dashboard:read", "posts:create", "posts:update", "media:manage"],

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BarChart3, BookOpen, Bot, FolderOpen, Home, Image, Mail, MessageSquare, PenTool, Settings, Share2, Users } from "lucide-react";
+import { BarChart3, Bell, BookOpen, Bot, FolderOpen, Home, Image, Mail, MessageSquare, PenTool, Settings, Share2, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const adminNav = [
@@ -12,6 +12,7 @@ const adminNav = [
   { href: "/admin/media", label: "الوسائط", icon: Image },
   { href: "/admin/social-links", label: "التواصل", icon: Share2 },
   { href: "/admin/telegram", label: "بوت تليجرام", icon: Bot },
+  { href: "/admin/notifications", label: "الإشعارات", icon: Bell },
   { href: "/admin/users", label: "المستخدمون", icon: Users },
   { href: "/admin/settings", label: "الإعدادات", icon: Settings },
 ];
@@ -21,7 +22,7 @@ export function AdminShell({ children, user }: { children: React.ReactNode; user
     <div className="min-h-screen bg-ivory-light text-navy" dir="rtl">
       <aside className="fixed right-0 top-0 z-40 hidden h-screen w-72 border-l border-navy/10 bg-white/95 p-5 shadow-xl lg:block">
         <Link href="/" className="mb-8 block rounded-3xl bg-navy p-5 text-white">
-          <span className="block font-kufi text-2xl font-bold">مدى الناس</span>
+          <span className="block font-kufi text-2xl font-bold">مدى الإنسان</span>
           <span className="mt-1 block text-sm text-white/70">لوحة الإدارة</span>
         </Link>
         <nav className="space-y-2">
@@ -41,7 +42,7 @@ export function AdminShell({ children, user }: { children: React.ReactNode; user
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-xs font-bold text-gold">CMS</p>
-              <h1 className="font-kufi text-xl font-black text-navy">إدارة منصة مدى الناس</h1>
+              <h1 className="font-kufi text-xl font-black text-navy">إدارة منصة مدى الإنسان</h1>
             </div>
             <div className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-navy shadow-sm">
               <MessageSquare className="h-4 w-4 text-hope" />

@@ -59,7 +59,7 @@ async function savePost(formData: FormData) {
     content,
     excerpt: String(formData.get("excerpt") || ""),
     categoryName: category?.name || "",
-    siteName: process.env.NEXT_PUBLIC_SITE_NAME || "مدى الناس",
+    siteName: process.env.NEXT_PUBLIC_SITE_NAME || "مدى الإنسان",
     siteUrl: process.env.NEXT_PUBLIC_SITE_URL || "",
     slug,
   });
@@ -201,7 +201,7 @@ export default async function AdminArticlesPage({ searchParams }: { searchParams
             <textarea name="quote" placeholder="اقتباس بارز اختياري" className="textarea-field min-h-[80px]" />
           </div>
           <aside className="space-y-3 rounded-3xl bg-ivory-light p-4">
-            <ArticleSmartTools siteName={process.env.NEXT_PUBLIC_SITE_NAME || "مدى الناس"} siteUrl={process.env.NEXT_PUBLIC_SITE_URL || ""} />
+            <ArticleSmartTools siteName={process.env.NEXT_PUBLIC_SITE_NAME || "مدى الإنسان"} siteUrl={process.env.NEXT_PUBLIC_SITE_URL || ""} />
             <select name="categoryId" className="input-field"><option value="">اختر القسم</option>{categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
             <select name="type" className="input-field"><option value="NEWS">خبر</option><option value="STORY">قصة</option><option value="HUMAN_MESSAGE">رسالة إنسان</option><option value="CASE_FILE">ملف قضية</option><option value="CONTRIBUTOR_ARTICLE">مقال مشارك</option><option value="REPORT">تقرير</option></select>
             <select name="status" className="input-field"><option value="DRAFT">مسودة</option><option value="REVIEW">مراجعة</option><option value="SCHEDULED">مجدول</option><option value="PUBLISHED">نشر الآن</option></select>

@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 export const metadata: Metadata = {
   title: "تواصل معنا",
-  description: "تواصل مع فريق مدى الناس عبر أي وسيلة تناسبك.",
+  description: "تواصل مع فريق مدى الإنسان عبر أي وسيلة تناسبك.",
 };
 
 export default function ContactPage() {

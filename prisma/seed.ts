@@ -13,7 +13,7 @@ const defaultCategories = [
 ];
 
 const defaultPages = [
-  { title: "من نحن", slug: "about", content: "منصة مدى الناس مساحة تحريرية إنسانية مستقلة تركز على القصة، الإنسان، والصوت الذي لا يصل." },
+  { title: "من نحن", slug: "about", content: "منصة مدى الإنسان مساحة تحريرية إنسانية مستقلة تركز على القصة، الإنسان، والصوت الذي لا يصل." },
   { title: "اتصل بنا", slug: "contact", content: "يمكنك التواصل مع فريق التحرير عبر نموذج الاتصال أو القنوات الرسمية للمنصة." },
   { title: "سياسة النشر", slug: "editorial-policy", content: "نراجع المواد قبل النشر، ونحترم الخصوصية، ونرفض المحتوى المضلل أو المسيء." },
   { title: "سياسة الخصوصية", slug: "privacy", content: "نحمي بيانات المرسلين والمساهمين ولا ننشر أي معلومات حساسة دون موافقة واضحة." },
@@ -31,13 +31,13 @@ async function upsertAdmin(email: string, password: string, name: string, role: 
 async function main() {
   const organization = await prisma.organization.upsert({
     where: { slug: "mada-alinsan" },
-    update: { name: "مدى الناس", locale: "ar-YE", timezone: "Asia/Aden" },
-    create: { name: "مدى الناس", slug: "mada-alinsan", description: "منصة إنسانية، فكرية، ثقافية عربية", locale: "ar-YE", timezone: "Asia/Aden" },
+    update: { name: "مدى الإنسان", locale: "ar-YE", timezone: "Asia/Aden" },
+    create: { name: "مدى الإنسان", slug: "mada-alinsan", description: "منصة إنسانية - اجتماعية - ثقافية - علمية - متنوعة", locale: "ar-YE", timezone: "Asia/Aden" },
   });
 
   const adminEmail = process.env.ADMIN_EMAIL || "admin@madannas.org";
   const adminPassword = process.env.ADMIN_PASSWORD || "change-this-strong-password";
-  const adminName = process.env.ADMIN_NAME || "مدير مدى الناس";
+  const adminName = process.env.ADMIN_NAME || "مدير مدى الإنسان";
 
   await upsertAdmin(adminEmail, adminPassword, adminName, UserRole.OWNER, organization.id);
   const moatazPassword = process.env.MOATAZ_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD;
@@ -93,8 +93,8 @@ async function main() {
 
   await prisma.siteSetting.upsert({
     where: { key: "site_identity" },
-    update: { value: { name: "مدى الناس", slogan: "نمدّ صوت الإنسان… حتى لا تبقى القصة وحيدة", locale: "ar-YE", timezone: "Asia/Aden" }, group: "identity", type: "json", isPublic: true, organizationId: organization.id },
-    create: { key: "site_identity", value: { name: "مدى الناس", slogan: "نمدّ صوت الإنسان… حتى لا تبقى القصة وحيدة", locale: "ar-YE", timezone: "Asia/Aden" }, group: "identity", type: "json", isPublic: true, organizationId: organization.id },
+    update: { value: { name: "مدى الإنسان", slogan: "إنسانية - اجتماعية - ثقافية - علمية - متنوعة", locale: "ar-YE", timezone: "Asia/Aden" }, group: "identity", type: "json", isPublic: true, organizationId: organization.id },
+    create: { key: "site_identity", value: { name: "مدى الإنسان", slogan: "إنسانية - اجتماعية - ثقافية - علمية - متنوعة", locale: "ar-YE", timezone: "Asia/Aden" }, group: "identity", type: "json", isPublic: true, organizationId: organization.id },
   });
 
   await prisma.siteSetting.upsert({
@@ -105,8 +105,8 @@ async function main() {
 
   await prisma.siteSetting.upsert({
     where: { key: "seo_defaults" },
-    update: { value: { defaultTitle: "مدى الناس", defaultDescription: "منصة إنسانية، فكرية، ثقافية عربية", defaultOgImage: null, enableStructuredData: true }, group: "seo", type: "json", isPublic: true, organizationId: organization.id },
-    create: { key: "seo_defaults", value: { defaultTitle: "مدى الناس", defaultDescription: "منصة إنسانية، فكرية، ثقافية عربية", defaultOgImage: null, enableStructuredData: true }, group: "seo", type: "json", isPublic: true, organizationId: organization.id },
+    update: { value: { defaultTitle: "مدى الإنسان", defaultDescription: "منصة إنسانية - اجتماعية - ثقافية - علمية - متنوعة", defaultOgImage: null, enableStructuredData: true }, group: "seo", type: "json", isPublic: true, organizationId: organization.id },
+    create: { key: "seo_defaults", value: { defaultTitle: "مدى الإنسان", defaultDescription: "منصة إنسانية - اجتماعية - ثقافية - علمية - متنوعة", defaultOgImage: null, enableStructuredData: true }, group: "seo", type: "json", isPublic: true, organizationId: organization.id },
   });
 
   console.log("Seed completed. Admins:", adminEmail, "mtzallqmy@gmail.com");

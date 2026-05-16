@@ -26,7 +26,7 @@ function setValue(form: HTMLFormElement, name: string, value: string, onlyIfEmpt
   field.dispatchEvent(new Event("change", { bubbles: true }));
 }
 
-export default function ArticleSmartTools({ siteName = "مدى الناس", siteUrl = "" }: { siteName?: string; siteUrl?: string }) {
+export default function ArticleSmartTools({ siteName = "مدى الإنسان", siteUrl = "" }: { siteName?: string; siteUrl?: string }) {
   const [message, setMessage] = useState("");
 
   function withForm(action: (form: HTMLFormElement) => void) {

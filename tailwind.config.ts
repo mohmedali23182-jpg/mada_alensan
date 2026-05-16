@@ -10,7 +10,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // الهوية البصرية لـ "مدى الناس"
+        // الهوية البصرية لـ "مدى الإنسان"
         navy: {
           DEFAULT: "#0E1B2A",
           light: "#162436",

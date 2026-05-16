@@ -8,8 +8,8 @@ async function main() {
 
   const organization = await prisma.organization.upsert({
     where: { slug: "mada-alinsan" },
-    update: { name: "مدى الناس", locale: "ar-YE", timezone: "Asia/Aden" },
-    create: { name: "مدى الناس", slug: "mada-alinsan", description: "منصة تحريرية إنسانية عربية", locale: "ar-YE", timezone: "Asia/Aden" },
+    update: { name: "مدى الإنسان", locale: "ar-YE", timezone: "Asia/Aden" },
+    create: { name: "مدى الإنسان", slug: "mada-alinsan", description: "منصة تحريرية إنسانية عربية", locale: "ar-YE", timezone: "Asia/Aden" },
   });
 
   const moatazPassword = process.env.MOATAZ_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD;

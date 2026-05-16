@@ -245,7 +245,7 @@ export async function handleTelegramUpdate(update: TelegramUpdate) {
 
   const text = getText(message);
   if (["/start", "/help"].includes(text)) {
-    await sendTelegramMessage(chatId, "أهلًا بك في بوت إدارة مدى الناس.\n\nالأوامر:\n/newpost إنشاء مقال جديد\n/cancel إلغاء المسودة\n/status عرض المسودة الحالية\n/topics اقتراح مواضيع");
+    await sendTelegramMessage(chatId, "أهلًا بك في بوت إدارة مدى الإنسان.\n\nالأوامر:\n/newpost إنشاء مقال جديد\n/cancel إلغاء المسودة\n/status عرض المسودة الحالية\n/topics اقتراح مواضيع");
     return { ok: true };
   }
   if (text === "/cancel") {

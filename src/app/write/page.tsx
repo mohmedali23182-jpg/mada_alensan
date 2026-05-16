@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 export const metadata: Metadata = {
   title: "اكتب معنا",
-  description: "أرسل مقالك إلى مدى الناس وسننشره باسمك بعد المراجعة التحريرية.",
+  description: "أرسل مقالك إلى مدى الإنسان وسننشره باسمك بعد المراجعة التحريرية.",
 };
 
 export default function WritePage() {

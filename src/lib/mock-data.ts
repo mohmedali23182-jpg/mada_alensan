@@ -36,7 +36,7 @@ export const AUTHORS: Author[] = [
     id: "5",
     name: "هيئة التحرير",
     avatar: undefined,
-    bio: "فريق التحرير في مدى الناس.",
+    bio: "فريق التحرير في مدى الإنسان.",
     role: "هيئة التحرير",
   },
 ];

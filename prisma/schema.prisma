@@ -177,7 +177,7 @@ enum TelegramDraftStep {
 
 model Organization {
   id          String   @id @default(uuid()) @db.Uuid
-  name        String   @default("مدى الناس")
+  name        String   @default("مدى الإنسان")
   slug        String   @unique @default("mada-alinsan")
   description String?
   logoUrl     String?
@@ -224,6 +224,8 @@ model User {
   bookmarks       Bookmark[]
   reactions       PostReaction[]
   postViews       PostView[]
+  pushDevices     PushDevice[]
+  notificationPreferences NotificationPreference[]
 
   @@index([role])
   @@index([isActive])
@@ -844,6 +846,64 @@ model ActivityLog {
   @@index([entity, entityId])
   @@index([createdAt])
   @@index([userId])
+}
+
+
+model PushDevice {
+  id        String   @id @default(uuid()) @db.Uuid
+  token     String   @unique
+  platform  String   @default("android")
+  enabled   Boolean  @default(true)
+  appVersion String?
+  locale    String?  @default("ar")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lastSeenAt DateTime?
+
+  userId    String? @db.Uuid
+  user      User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([enabled])
+  @@index([platform])
+}
+
+model Notification {
+  id        String   @id @default(uuid()) @db.Uuid
+  title     String
+  body      String
+  type      String   @default("SYSTEM")
+  url       String?
+  imageUrl  String?
+  status    String   @default("SENT")
+  target    String?  @default("ALL")
+  sentCount Int      @default(0)
+  failedCount Int    @default(0)
+  error     String?
+  createdAt DateTime @default(now())
+  sentAt    DateTime?
+
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model NotificationPreference {
+  id             String   @id @default(uuid()) @db.Uuid
+  deviceToken    String?  @unique
+  enableAll      Boolean  @default(true)
+  newArticles    Boolean  @default(true)
+  breakingNews   Boolean  @default(true)
+  updates        Boolean  @default(true)
+  systemMessages Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  userId         String? @db.Uuid
+  user           User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([enableAll])
 }
 
 model TelegramDraft {

@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!author) return {};
   return buildMetadata({
     title: `${author.name} | كتّاب مدى الإنسان`,
-    description: author.bio || "كاتب في منصة إنسانية، فكرية، ثقافية.",
+    description: author.bio || "كاتب في منصة إنسانية - اجتماعية - ثقافية - علمية - متنوعة.",
     image: author.avatarUrl || undefined,
     keywords: [author.name, "مدى الإنسان", "أقلام الناس", "ثقافة", "فكر"],
   });

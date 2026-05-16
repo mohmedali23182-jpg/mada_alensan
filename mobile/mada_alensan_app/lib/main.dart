@@ -301,7 +301,7 @@ class HeaderCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('منصة إنسانية، فكرية، ثقافية', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+            Text('منصة إنسانية - اجتماعية - ثقافية - علمية - متنوعة', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             const Text('اقرأ، شارك قصة، وتابع المواد المنشورة من موقع مدى الإنسان الرسمي.'),
             const SizedBox(height: 14),

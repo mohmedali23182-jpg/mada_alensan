@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://madaalinsan.vercel.app";
-export const siteName = process.env.NEXT_PUBLIC_SITE_NAME || "مدى الناس";
+export const siteName = process.env.NEXT_PUBLIC_SITE_NAME || "مدى الإنسان";
 
 export function buildMetadata(input: {
   title: string;
@@ -18,7 +18,7 @@ export function buildMetadata(input: {
 }): Metadata {
   const url = new URL(input.path || "/", siteUrl).toString();
   const title = input.title.includes(siteName) ? input.title : `${input.title} | ${siteName}`;
-  const description = input.description || "منصة إنسانية عربية مستقلة تنقل قصص الناس وقضاياهم بكرامة ووضوح.";
+  const description = input.description || "منصة إنسانية - اجتماعية - ثقافية - علمية - متنوعة تنقل قصص الناس وقضاياهم بكرامة ووضوح.";
   return {
     title,
     description,
@@ -36,7 +36,7 @@ export function organizationJsonLd() {
     "@type": "Organization",
     name: siteName,
     url: siteUrl,
-    description: "منصة إنسانية عربية مستقلة",
+    description: "منصة إنسانية - اجتماعية - ثقافية - علمية - متنوعة",
   };
 }
 

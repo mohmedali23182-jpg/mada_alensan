@@ -20,12 +20,17 @@ def patch_manifest() -> None:
         raise SystemExit(f"AndroidManifest.xml not found: {MANIFEST}")
     text = MANIFEST.read_text(encoding="utf-8")
 
-    if "android.permission.INTERNET" not in text:
-        text = text.replace(
-            "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\">",
-            "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
-            "    <uses-permission android:name=\"android.permission.INTERNET\" />",
-        )
+    permissions = [
+        "android.permission.INTERNET",
+        "android.permission.POST_NOTIFICATIONS",
+    ]
+    for permission in permissions:
+        if permission not in text:
+            text = text.replace(
+                "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\">",
+                "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                f"    <uses-permission android:name=\"{permission}\" />",
+            )
 
     # Keep a clear Arabic label for installed APKs without requiring custom assets.
     text = text.replace('android:label="mada_alensan_app"', 'android:label="مدى الإنسان"')
