@@ -16,19 +16,39 @@ function mediaType(mime: string) {
   return "DOCUMENT";
 }
 
+function flattenValidationErrors(error: import("zod").ZodError) {
+  const fieldErrors = error.flatten().fieldErrors;
+  return Object.fromEntries(
+    Object.entries(fieldErrors)
+      .map(([field, messages]) => [field, messages?.[0]])
+      .filter((entry): entry is [string, string] => Boolean(entry[1])),
+  );
+}
+
 export async function GET() {
-  return NextResponse.json({ ok: false, message: "استخدم POST لإرسال المقال." }, { status: 405 });
+  return NextResponse.json(
+    { ok: false, message: "استخدم POST لإرسال المقال." },
+    { status: 405 },
+  );
 }
 
 export async function POST(request: Request) {
   try {
     const body = await readBody(request);
-    const rawData = normalizeEmptyStrings((body.data || {}) as Record<string, unknown>);
-    const parsed = articleSubmissionSchema.safeParse({ ...rawData, body: rawData.body || rawData.content });
+    const rawData = normalizeEmptyStrings(
+      (body.data || {}) as Record<string, unknown>,
+    );
+    const parsed = articleSubmissionSchema.safeParse({
+      ...rawData,
+      body: rawData.body || rawData.content,
+    });
 
     if (!parsed.success) {
-      const firstMessage = Object.values(parsed.error.flatten().fieldErrors).flat()[0] || "بيانات المقال غير مكتملة";
-      return NextResponse.json({ ok: false, message: firstMessage, errors: parsed.error.flatten() }, { status: 400 });
+      const errors = flattenValidationErrors(parsed.error);
+      return NextResponse.json(
+        { ok: false, message: "يرجى مراجعة الحقول المطلوبة.", errors },
+        { status: 400 },
+      );
     }
 
     const item = await prisma.submission.create({
@@ -45,30 +65,55 @@ export async function POST(request: Request) {
         socialUrl: parsed.data.socialUrl || null,
         allowPublish: parsed.data.allowPublish,
         allowPhoto: parsed.data.allowPhoto,
-        reviewNotes: rawData.authorBio ? `نبذة الكاتب: ${rawData.authorBio}` : null,
+        reviewNotes: parsed.data.authorBio
+          ? `نبذة الكاتب: ${parsed.data.authorBio}`
+          : null,
       },
     });
 
     const warnings: string[] = [];
-    for (const file of formFiles(body.form, ["attachments", "coverImage", "avatar"])) {
+    for (const file of formFiles(body.form, [
+      "attachments",
+      "coverImage",
+      "avatar",
+    ])) {
       try {
         const uploaded = await uploadToStorage(file, `submissions/${item.id}`);
-        await prisma.media.create({ data: { ...uploaded, type: mediaType(file.type) as never, submissionId: item.id } });
-        await prisma.activityLog.create({ data: { action: "media.uploaded", entity: "Submission", entityId: item.id, metadata: { filename: file.name, mimeType: file.type } } }).catch(() => null);
+        await prisma.media.create({
+          data: {
+            ...uploaded,
+            type: mediaType(file.type) as never,
+            submissionId: item.id,
+          },
+        });
+        await prisma.activityLog
+          .create({
+            data: {
+              action: "media.uploaded",
+              entity: "Submission",
+              entityId: item.id,
+              metadata: { filename: file.name, mimeType: file.type },
+            },
+          })
+          .catch(() => null);
       } catch (error) {
         console.error("[submissions:article:upload]", error);
-        warnings.push(error instanceof Error ? error.message : "تعذر رفع أحد الملفات");
+        warnings.push(
+          error instanceof Error ? error.message : "تعذر رفع أحد الملفات",
+        );
       }
     }
 
-    await prisma.activityLog.create({
-      data: {
-        action: "submission.article.created",
-        entity: "Submission",
-        entityId: item.id,
-        metadata: { title: item.title, email: item.email },
-      },
-    }).catch(() => null);
+    await prisma.activityLog
+      .create({
+        data: {
+          action: "submission.article.created",
+          entity: "Submission",
+          entityId: item.id,
+          metadata: { title: item.title, email: item.email },
+        },
+      })
+      .catch(() => null);
 
     await notifyAdmin({
       subject: `مقال جديد بانتظار المراجعة: ${parsed.data.title}`,
@@ -84,9 +129,17 @@ export async function POST(request: Request) {
       ],
     }).catch((error) => console.error("[submissions:article:notify]", error));
 
-    return NextResponse.json({ ok: true, id: item.id, message: "تم إرسال المقال بنجاح، سنراجعه قبل النشر.", warnings });
+    return NextResponse.json({
+      ok: true,
+      id: item.id,
+      message: "تم إرسال المقال بنجاح، سنراجعه قبل النشر.",
+      warnings,
+    });
   } catch (error) {
     console.error("[submissions:article]", error);
-    return NextResponse.json({ ok: false, message: "تعذر إرسال المقال حاليًا. حاول لاحقًا." }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, message: "تعذر إرسال المقال حاليًا. حاول لاحقًا." },
+      { status: 500 },
+    );
   }
 }

@@ -147,7 +147,7 @@ async function ensureContributor(name?: string) {
   return prisma.contributor.upsert({
     where: { slug },
     update: { name, isActive: true },
-    create: { name, slug, bio: "كاتب عبر بوت تليجرام", isActive: true },
+    create: { name, slug, bio: null, isActive: true },
   });
 }
 
@@ -187,8 +187,8 @@ async function publishDraft(chatId: string, data: DraftData) {
   });
   await syncPostSeo(prisma, post.id, post);
   await ensurePostStats(prisma, post.id, post.viewsCount || 0);
-  await createPostRevision(prisma, { postId: post.id, title: post.title, excerpt: post.excerpt, content: post.content, changeNote: "إنشاء المقال عبر بوت تليجرام", snapshot: post });
-  await recordPostWorkflow(prisma, { postId: post.id, action: "CREATED", toStatus: post.status, note: "تم إنشاء المقال عبر بوت تليجرام" });
+  await createPostRevision(prisma, { postId: post.id, title: post.title, excerpt: post.excerpt, content: post.content, changeNote: "إنشاء المقال عبر أداة الإدارة", snapshot: post });
+  await recordPostWorkflow(prisma, { postId: post.id, action: "CREATED", toStatus: post.status, note: "تم إنشاء المقال عبر أداة الإدارة" });
   if (shouldPublishNow) await publishPostToTelegramChannel(post.id);
   await resetDraft(chatId);
   return post;
