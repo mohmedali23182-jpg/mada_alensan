@@ -4,8 +4,8 @@ import type { Article, Case, Author, ArticleCategory, CaseStatus as UiCaseStatus
 
 export const dynamic = "force-dynamic";
 
-const fallbackImage = "/images/placeholder-cover.svg";
-const fallbackAvatar = "";
+const fallbackImage = "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1200&q=80";
+const fallbackAvatar = "https://i.pravatar.cc/150?img=60";
 
 function logContentError(scope: string, error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
@@ -56,9 +56,9 @@ function authorFromPost(post: PostWithRelations): Author {
     id: contributor?.id || user?.id || "editorial-team",
     slug: contributor?.slug || undefined,
     name: contributor?.name || user?.name || "هيئة التحرير",
-    avatar: contributor?.avatarUrl || user?.avatarUrl || fallbackAvatar || undefined,
-    bio: contributor?.bio || "كاتب في منصة إنسانية - اجتماعية - ثقافية - علمية - متنوعة.",
-    role: contributor?.bio ? undefined : user?.role ? "فريق التحرير" : undefined,
+    avatar: contributor?.avatarUrl || user?.avatarUrl || fallbackAvatar,
+    bio: contributor?.bio || "كاتب في منصة مدى الناس.",
+    role: contributor ? "كاتب مشارك" : user?.role ? "فريق التحرير" : "هيئة التحرير",
   };
 }
 
@@ -127,14 +127,14 @@ const postInclude = { category: true, contributor: true, author: { select: { id:
 
 export async function getPublishedArticles(limit = 12) {
   return safeQuery("published-articles", async () => {
-    const posts = await prisma.post.findMany({ where: { status: "PUBLISHED", deletedAt: null, visibility: "PUBLIC" }, include: postInclude, orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }], take: limit });
+    const posts = await prisma.post.findMany({ where: { status: "PUBLISHED" }, include: postInclude, orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }], take: limit });
     return posts.map((post: PostWithRelations) => postToArticle(post));
   }, [] as Article[]);
 }
 
 export async function getFeaturedArticlesFromDb(limit = 3) {
   return safeQuery("featured-articles", async () => {
-    const posts = await prisma.post.findMany({ where: { status: "PUBLISHED", deletedAt: null, visibility: "PUBLIC", OR: [{ featured: true }, { isStoryOfDay: true }] }, include: postInclude, orderBy: [{ isStoryOfDay: "desc" }, { featured: "desc" }, { publishedAt: "desc" }], take: limit });
+    const posts = await prisma.post.findMany({ where: { status: "PUBLISHED", OR: [{ featured: true }, { isStoryOfDay: true }] }, include: postInclude, orderBy: [{ isStoryOfDay: "desc" }, { featured: "desc" }, { publishedAt: "desc" }], take: limit });
     return posts.map((post: PostWithRelations) => postToArticle(post));
   }, [] as Article[]);
 }
@@ -147,7 +147,7 @@ export async function getArticlesByUiCategory(category: ArticleCategory, limit =
 export async function getArticleBySlugFromDb(slug: string) {
   const cleanSlug = decodeURIComponent(slug || "").trim();
   return safeQuery("article-by-slug", async () => {
-    const post = await prisma.post.findFirst({ where: { slug: cleanSlug, status: "PUBLISHED", deletedAt: null, visibility: "PUBLIC" }, include: postInclude });
+    const post = await prisma.post.findFirst({ where: { slug: cleanSlug, status: "PUBLISHED" }, include: postInclude });
     return post ? postToArticle(post) : null;
   }, null);
 }
@@ -175,13 +175,13 @@ export async function getCaseBySlugFromDb(slug: string) {
 export async function getContributorsFromDb(limit = 12) {
   return safeQuery("contributors", async () => {
     const contributors = await prisma.contributor.findMany({ where: { isActive: true }, include: { _count: { select: { posts: true } } }, orderBy: { createdAt: "desc" }, take: limit });
-    return contributors.map((item: any): Author => ({ id: item.id, slug: item.slug, name: item.name, avatar: item.avatarUrl || undefined, bio: item.bio || "كاتب في منصة إنسانية - اجتماعية - ثقافية - علمية - متنوعة.", role: undefined, articlesCount: item._count.posts, social: { facebook: item.facebookUrl || undefined, instagram: item.instagramUrl || undefined, twitter: item.xUrl || undefined, whatsapp: item.whatsappUrl || undefined, telegram: item.telegramUrl || undefined, youtube: item.youtubeUrl || undefined, website: item.websiteUrl || undefined } }));
+    return contributors.map((item: any): Author => ({ id: item.id, slug: item.slug, name: item.name, avatar: item.avatarUrl || fallbackAvatar, bio: item.bio || "كاتب مشارك في مدى الناس.", role: "كاتب مشارك", articlesCount: item._count.posts, social: { facebook: item.facebookUrl || undefined, instagram: item.instagramUrl || undefined, twitter: item.xUrl || undefined, whatsapp: item.whatsappUrl || undefined, telegram: item.telegramUrl || undefined, youtube: item.youtubeUrl || undefined, website: item.websiteUrl || undefined } }));
   }, [] as Author[]);
 }
 
 export async function getStatsFromDb() {
   return safeQuery("stats", async () => {
-    const articles = await safeQuery("stats-posts", () => prisma.post.count({ where: { status: "PUBLISHED", deletedAt: null, visibility: "PUBLIC" } }), 0);
+    const articles = await safeQuery("stats-posts", () => prisma.post.count({ where: { status: "PUBLISHED" } }), 0);
     const cases = await safeQuery("stats-cases", () => prisma.case.count(), 0);
     const contributors = await safeQuery("stats-contributors", () => prisma.contributor.count({ where: { isActive: true } }), 0);
     const submissions = await safeQuery("stats-submissions", () => prisma.submission.count(), 0);

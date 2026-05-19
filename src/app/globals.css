@@ -12,9 +12,6 @@
     --urgent: #B84C4C;
     --white: #FFFFFF;
     --text: #3E4652;
-    --font-cairo: "Cairo", "Noto Kufi Arabic", "Tajawal", system-ui, sans-serif;
-    --font-tajawal: "Tajawal", "Cairo", system-ui, sans-serif;
-    --font-kufi: "Noto Kufi Arabic", "Cairo", system-ui, sans-serif;
   }
 
   * {
@@ -179,3 +176,14 @@
 /* RTL overrides */
 .ltr { direction: ltr; }
 .rtl { direction: rtl; }
+
+.prose-arabic h2 { margin-top: 2rem; margin-bottom: 1rem; font-family: var(--font-cairo); font-size: 1.5rem; line-height: 1.7; font-weight: 800; color: #13233a; }
+.prose-arabic h3 { margin-top: 1.6rem; margin-bottom: .8rem; font-family: var(--font-cairo); font-size: 1.25rem; line-height: 1.7; font-weight: 800; color: #13233a; }
+.prose-arabic p { color: #283345; font-family: var(--font-tajawal); font-size: 1rem; line-height: 2.2; margin-bottom: 1.25rem; }
+.prose-arabic blockquote { margin: 2rem 0; border-right: 4px solid #c9a227; background: #fff; border-radius: 1rem; padding: 1.25rem 1.5rem; color: #13233a; font-weight: 700; box-shadow: 0 10px 30px rgba(19,35,58,.06); }
+.prose-arabic figure { margin: 2rem 0; overflow: hidden; border-radius: 1.25rem; background: #fff; box-shadow: 0 12px 35px rgba(19,35,58,.08); }
+.prose-arabic figure img { width: 100%; height: auto; display: block; }
+.prose-arabic figcaption { padding: .75rem 1rem; color: rgba(19,35,58,.65); font-size: .875rem; text-align: center; }
+.prose-arabic a { color: #2f8f6b; font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }
+.prose-arabic ul, .prose-arabic ol { margin: 1rem 1.5rem; line-height: 2; }
+.prose-arabic hr { margin: 2rem 0; border: 0; border-top: 1px solid rgba(19,35,58,.12); }

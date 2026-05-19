@@ -77,7 +77,7 @@ export function extractKeywords(title = "", content = "", categoryName = "") {
     .sort((a, b) => b[1] - a[1])
     .map(([word]) => word)
     .slice(0, 10);
-  const priority = [categoryName, "مدى الإنسان", "قصة إنسانية"].filter(Boolean);
+  const priority = [categoryName, "مدى الناس", "قصة إنسانية"].filter(Boolean);
   return [...new Set([...priority, ...keywords])].slice(0, 12);
 }
 
@@ -95,7 +95,7 @@ export function extractGeoHints(content = "") {
   };
 }
 
-export function generateSeoTitle(title = "", siteName = "مدى الإنسان") {
+export function generateSeoTitle(title = "", siteName = "مدى الناس") {
   const clean = normalizeText(title);
   if (!clean) return siteName;
   const suffix = ` | ${siteName}`;
@@ -106,7 +106,7 @@ export function generateSeoTitle(title = "", siteName = "مدى الإنسان")
 
 export function generateSeoDescription(content = "", excerpt = "") {
   const smart = extractSmartExcerpt(content, excerpt);
-  if (!smart) return "منصة مدى الإنسان تنقل قصص الناس وقضاياهم بكرامة ومسؤولية.";
+  if (!smart) return "منصة مدى الناس تنقل قصص الناس وقضاياهم بكرامة ومسؤولية.";
   if (smart.length <= 165) return smart;
   return `${smart.slice(0, 160).trim()}…`;
 }
@@ -128,7 +128,7 @@ export function buildEditorialMetadata(input: {
 }) {
   const excerpt = extractSmartExcerpt(input.content, input.excerpt || input.title);
   const featuredQuote = extractFeaturedQuote(input.content);
-  const seoTitle = generateSeoTitle(input.title, input.siteName || "مدى الإنسان");
+  const seoTitle = generateSeoTitle(input.title, input.siteName || "مدى الناس");
   const seoDescription = generateSeoDescription(input.content, excerpt);
   const keywords = extractKeywords(input.title, input.content, input.categoryName || "");
   const geo = extractGeoHints(input.content);

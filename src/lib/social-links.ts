@@ -1,5 +1,5 @@
 // ============================================
-// روابط التواصل الاجتماعي - مدى الإنسان
+// روابط التواصل الاجتماعي - مدى الناس
 // مكوّن مرن قابل للإدارة من لوحة التحكم
 // ============================================
 
@@ -72,7 +72,7 @@ export const SOCIAL_LINKS: SocialPlatform[] = [
     id: "email",
     name: "email",
     label: "البريد الإلكتروني",
-    url: "mailto:mtzallqmy@gmail.com",
+    url: "mailto:info@madaalinsan.com",
     color: "#C99A3E",
     bgColor: "#FDF6E8",
     icon: "Mail",

@@ -27,15 +27,15 @@ export default function Footer() {
                 <span className="text-white font-bold text-lg font-kufi">م</span>
               </div>
               <div>
-                <div className="text-white font-bold text-xl font-kufi">مدى الإنسان</div>
-                <div className="text-gold text-[10px] font-tajawal opacity-80">إنسانية - اجتماعية - ثقافية - علمية - متنوعة</div>
+                <div className="text-white font-bold text-xl font-kufi">مدى الناس</div>
+                <div className="text-gold text-[10px] font-tajawal opacity-80">منصة إنسانية مستقلة</div>
               </div>
             </Link>
             <p className="text-ivory/60 text-sm font-tajawal leading-relaxed mb-5">
-              منصة إنسانية - اجتماعية - ثقافية - علمية - متنوعة تنقل قصص الناس ورسائلهم وقضاياهم بكرامة ووضوح، حتى يصل الصوت إلى من يهمه الأمر.
+              منصة إنسانية عربية مستقلة تنقل قصص الناس ورسائلهم وقضاياهم بكرامة ووضوح، حتى يصل الصوت إلى من يهمه الأمر.
             </p>
             <p className="text-gold text-xs font-kufi italic">
-              «إنسانية - اجتماعية - ثقافية - علمية - متنوعة»
+              «نمدّ صوت الإنسان… حتى لا تبقى القصة وحيدة»
             </p>
           </div>
 
@@ -93,11 +93,11 @@ export default function Footer() {
             </h4>
             <div className="space-y-3 mb-5">
               <a
-                href="mailto:mtzallqmy@gmail.com"
+                href="mailto:info@madaalinsan.com"
                 className="flex items-center gap-2 text-ivory/60 hover:text-gold transition-colors text-sm font-tajawal"
               >
                 <Mail size={14} className="text-gold" />
-                mtzallqmy@gmail.com
+                info@madaalinsan.com
               </a>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -124,7 +124,7 @@ export default function Footer() {
         {/* شريط أسفل */}
         <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row items-center justify-between gap-3">
           <p className="text-ivory/40 text-xs font-tajawal text-center">
-            جميع الحقوق محفوظة © مدى الإنسان {new Date().getFullYear()} — منصة إنسانية - اجتماعية - ثقافية - علمية - متنوعة
+            جميع الحقوق محفوظة © مدى الناس {new Date().getFullYear()} — منصة إنسانية عربية مستقلة
           </p>
           <div className="flex items-center gap-4">
             <Link href="/about#policy" className="text-ivory/40 hover:text-gold text-xs font-tajawal transition-colors">

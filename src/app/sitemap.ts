@@ -8,7 +8,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://madaalinsan.vercel
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes = ["", "/news", "/life", "/stories", "/letters", "/issues", "/opinions", "/send-story", "/write", "/report", "/about", "/contact"].map((route) => ({ url: `${SITE_URL}${route}`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: route === "" ? 1 : 0.8 }));
   const [articles, cases, authors] = await Promise.all([
-    prisma.post.findMany({ where: { status: "PUBLISHED", deletedAt: null, visibility: "PUBLIC" }, select: { slug: true, updatedAt: true, publishedAt: true } }).catch(() => []),
+    prisma.post.findMany({ where: { status: "PUBLISHED" }, select: { slug: true, updatedAt: true, publishedAt: true } }).catch(() => []),
     prisma.case.findMany({ where: { status: { in: ["PUBLISHED", "CONTACTED", "IN_PROGRESS", "RESOLVED", "VERIFIED"] } }, select: { slug: true, updatedAt: true, publishedAt: true, lastUpdated: true } }).catch(() => []),
     prisma.contributor.findMany({ where: { isActive: true }, select: { slug: true, updatedAt: true } }).catch(() => []),
   ]);

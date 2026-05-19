@@ -3,11 +3,9 @@ import PageHero from "@/components/ui/PageHero";
 import ReportForm from "@/components/forms/ReportForm";
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
 export const metadata: Metadata = {
   title: "بلّغ عن حالة",
-  description: "أرسل بلاغاً عن حالة إنسانية عاجلة وسيتابعها فريق مدى الإنسان.",
+  description: "أرسل بلاغاً عن حالة إنسانية عاجلة وسيتابعها فريق مدى الناس.",
 };
 
 export default function ReportPage() {

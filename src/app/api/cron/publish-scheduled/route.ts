@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { publishPostToTelegramChannel } from "@/lib/telegram";
-import { recordPostWorkflow } from "@/lib/editorial-db";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -28,7 +27,7 @@ async function runScheduledPublisher(request: Request) {
   for (const post of duePosts) {
     const claim = await prisma.post.updateMany({
       where: { id: post.id, status: "SCHEDULED" },
-      data: { status: "PUBLISHED", publishedAt: new Date(), approvedAt: new Date() },
+      data: { status: "PUBLISHED", publishedAt: new Date() },
     });
 
     if (claim.count === 0) {
@@ -37,7 +36,6 @@ async function runScheduledPublisher(request: Request) {
     }
 
     try {
-      await recordPostWorkflow(prisma, { postId: post.id, action: "PUBLISHED", fromStatus: "SCHEDULED", toStatus: "PUBLISHED", note: "نشر تلقائي عبر المجدول" });
       await publishPostToTelegramChannel(post.id);
       results.push({ id: post.id, status: "published_and_sent" });
     } catch (error) {

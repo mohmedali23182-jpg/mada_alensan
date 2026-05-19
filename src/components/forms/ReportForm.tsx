@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { AlertTriangle, CheckCircle, Upload, AlertCircle } from "lucide-react";
-import { readJsonResponse } from "@/lib/http-json";
 
 const CASE_TYPES = ["حالة صحية", "أسرة محتاجة", "نزوح", "تعليم", "سكن", "مياه وخدمات", "طفل أو كبار سن", "أخرى"];
 const URGENCY_LEVELS = [
@@ -26,7 +25,7 @@ export default function ReportForm() {
     formData.set("urgencyLevel", urgency);
     try {
       const res = await fetch("/api/submissions/report", { method: "POST", body: formData });
-      const data = await readJsonResponse(res);
+      const data = (await res.json()) as { ok?: boolean; message?: string };
       if (!res.ok || !data.ok) throw new Error(data.message || "تعذر إرسال البلاغ");
       setState("success");
       e.currentTarget.reset();

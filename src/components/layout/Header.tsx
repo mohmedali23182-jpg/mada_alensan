@@ -42,10 +42,10 @@ export default function Header() {
             </div>
             <div>
               <div className="text-white font-bold text-xl font-kufi leading-tight tracking-wide">
-                مدى الإنسان
+                مدى الناس
               </div>
               <div className="text-gold text-[10px] font-tajawal opacity-80 leading-tight">
-                إنسانية - اجتماعية - ثقافية - علمية - متنوعة
+                منصة إنسانية مستقلة
               </div>
             </div>
           </Link>

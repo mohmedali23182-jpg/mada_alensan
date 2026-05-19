@@ -1,13 +1,11 @@
 import PageWrapper from "@/components/layout/PageWrapper";
 import PageHero from "@/components/ui/PageHero";
-import { Heart, Eye, Target, Shield, Users, BookOpen, UserRound } from "lucide-react";
+import { Heart, Eye, Target, Shield, Users, BookOpen } from "lucide-react";
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
 export const metadata: Metadata = {
   title: "من نحن",
-  description: "تعرّف على منصة مدى الإنسان - منصة إنسانية - اجتماعية - ثقافية - علمية - متنوعة.",
+  description: "تعرّف على منصة مدى الناس - منصة إنسانية عربية مستقلة.",
 };
 
 const VALUES = [
@@ -54,16 +52,19 @@ const TEAM = [
     name: "فريق التحرير",
     role: "المحررون والمراجعون",
     desc: "فريق من الصحفيين والكتّاب يراجع كل محتوى قبل النشر لضمان الدقة والكرامة.",
+    avatar: "https://i.pravatar.cc/150?img=60",
   },
   {
     name: "فريق التوثيق",
     role: "التحقق الميداني",
     desc: "يتحقق من القضايا الواردة ميدانياً ويتواصل مع أصحابها لجمع أكبر قدر من التفاصيل.",
+    avatar: "https://i.pravatar.cc/150?img=52",
   },
   {
     name: "فريق التقنية",
     role: "التطوير والتصميم",
-    desc: "يعمل على تطوير المنصة وضمان تجربة مستخدم راقية تليق بجمهور مدى الإنسان.",
+    desc: "يعمل على تطوير المنصة وضمان تجربة مستخدم راقية تليق بجمهور مدى الناس.",
+    avatar: "https://i.pravatar.cc/150?img=56",
   },
 ];
 
@@ -73,7 +74,7 @@ export default function AboutPage() {
       <PageHero
         badge="من نحن"
         title="من نحن"
-        subtitle="تعرّف على منصة مدى الإنسان، رسالتها، وفريق العمل خلفها"
+        subtitle="تعرّف على منصة مدى الناس، رسالتها، وفريق العمل خلفها"
       />
 
       <div className="bg-ivory">
@@ -83,7 +84,7 @@ export default function AboutPage() {
             <span className="text-3xl font-bold font-kufi text-gold">م</span>
           </div>
           <h2 className="text-2xl md:text-3xl font-bold font-cairo text-navy mb-4">
-            لماذا مدى الإنسان؟
+            لماذا مدى الناس؟
           </h2>
           <div className="w-14 h-1 bg-gold rounded-full mx-auto mb-6" />
           <div className="space-y-4 text-text font-tajawal leading-[2.2] text-base text-right">
@@ -91,7 +92,7 @@ export default function AboutPage() {
               في عالم تتدافع فيه الأخبار وتتراكم، تضيع قصص الناس البسيطين وراء عناوين السياسة والاقتصاد. الأم التي تكافح لتعليم أطفالها، العائلة النازحة التي تبني من الصفر، الطفل الذي يحتاج علاجاً لا يملك أسرته ثمنه — هؤلاء هم أصحاب القضايا الحقيقية.
             </p>
             <p>
-              جاءت مدى الإنسان لتكون منصة إنسانية، اجتماعية، ثقافية، علمية، ومتنوعة. لا تكتفي بنقل القضايا أو الأحداث، بل تقدم محتوى يحمل تنوعًا معرفيًا ورسالة سامية تخدم الإنسان والمجتمع.
+              جاءت مدى الناس لتكون صوتاً لمن لا صوت لهم. منصة تؤمن بأن كل إنسان يستحق أن تُروى قصته بكرامة، وأن تصل رسالته إلى من يهمه الأمر.
             </p>
             <p>
               «مدى» تعني البُعد والامتداد — نمدّ الأصوات وننقلها بعيداً، لأن لا قصة يجب أن تبقى وحيدة.
@@ -156,9 +157,11 @@ export default function AboutPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
               {TEAM.map((member) => (
                 <div key={member.name} className="text-center">
-                  <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-navy/10 text-navy ring-4 ring-gold/20" aria-hidden="true">
-                    <UserRound size={34} />
-                  </div>
+                  <img
+                    src={member.avatar}
+                    alt={member.name}
+                    className="w-20 h-20 rounded-full object-cover mx-auto mb-4 ring-4 ring-gold/20"
+                  />
                   <h3 className="font-bold font-cairo text-navy text-base">{member.name}</h3>
                   <p className="text-gold text-xs font-tajawal mb-3">{member.role}</p>
                   <p className="text-text-light text-sm font-tajawal leading-relaxed">{member.desc}</p>

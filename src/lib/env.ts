@@ -7,5 +7,5 @@ export function getRequiredEnv(name: string) {
 }
 
 export function getSiteUrl() {
-  return process.env.NEXT_PUBLIC_SITE_URL || "https://mada-alensan.vercel.app";
+  return process.env.NEXT_PUBLIC_SITE_URL || "https://madaalinsan.vercel.app";
 }

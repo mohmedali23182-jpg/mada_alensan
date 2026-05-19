@@ -1,4 +1,4 @@
-export type CmsRole = "OWNER" | "ADMIN" | "EDITOR" | "REVIEWER" | "AUTHOR" | "CONTRIBUTOR" | "FIELD_REPORTER" | "VIEWER";
+export type CmsRole = "OWNER" | "ADMIN" | "EDITOR" | "REVIEWER" | "CONTRIBUTOR" | "FIELD_REPORTER" | "VIEWER";
 
 export type Permission =
   | "dashboard:read"
@@ -12,15 +12,13 @@ export type Permission =
   | "submissions:manage"
   | "media:manage"
   | "users:manage"
-  | "settings:manage"
-  | "notifications:manage";
+  | "settings:manage";
 
 const rolePermissions: Record<CmsRole, Permission[]> = {
-  OWNER: ["dashboard:read", "posts:create", "posts:update", "posts:publish", "posts:delete", "categories:manage", "contributors:manage", "cases:manage", "submissions:manage", "media:manage", "users:manage", "settings:manage", "notifications:manage"],
-  ADMIN: ["dashboard:read", "posts:create", "posts:update", "posts:publish", "posts:delete", "categories:manage", "contributors:manage", "cases:manage", "submissions:manage", "media:manage", "users:manage", "settings:manage", "notifications:manage"],
+  OWNER: ["dashboard:read", "posts:create", "posts:update", "posts:publish", "posts:delete", "categories:manage", "contributors:manage", "cases:manage", "submissions:manage", "media:manage", "users:manage", "settings:manage"],
+  ADMIN: ["dashboard:read", "posts:create", "posts:update", "posts:publish", "posts:delete", "categories:manage", "contributors:manage", "cases:manage", "submissions:manage", "media:manage", "users:manage", "settings:manage"],
   EDITOR: ["dashboard:read", "posts:create", "posts:update", "submissions:manage", "media:manage"],
   REVIEWER: ["dashboard:read", "posts:update", "posts:publish", "submissions:manage"],
-  AUTHOR: ["dashboard:read", "posts:create", "posts:update", "media:manage"],
   CONTRIBUTOR: ["dashboard:read", "posts:create"],
   FIELD_REPORTER: ["dashboard:read", "submissions:manage", "media:manage"],
   VIEWER: ["dashboard:read"],

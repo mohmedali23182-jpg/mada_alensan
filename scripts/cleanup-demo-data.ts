@@ -4,38 +4,21 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("Starting production cleanup...");
-
-  const organization = await prisma.organization.upsert({
-    where: { slug: "mada-alinsan" },
-    update: { name: "مدى الإنسان", locale: "ar-YE", timezone: "Asia/Aden" },
-    create: { name: "مدى الإنسان", slug: "mada-alinsan", description: "منصة تحريرية إنسانية عربية", locale: "ar-YE", timezone: "Asia/Aden" },
-  });
+  console.log("Starting demo cleanup...");
 
   const moatazPassword = process.env.MOATAZ_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD;
   if (moatazPassword) {
     const passwordHash = await bcrypt.hash(moatazPassword, 12);
     await prisma.user.upsert({
       where: { email: "mtzallqmy@gmail.com" },
-      update: { passwordHash, role: UserRole.OWNER, name: "معتز العلقمي", isActive: true, organizationId: organization.id },
-      create: { email: "mtzallqmy@gmail.com", passwordHash, role: UserRole.OWNER, name: "معتز العلقمي", isActive: true, organizationId: organization.id },
+      update: { passwordHash, role: UserRole.OWNER, name: "معتز العلقمي", isActive: true },
+      create: { email: "mtzallqmy@gmail.com", passwordHash, role: UserRole.OWNER, name: "معتز العلقمي", isActive: true },
     });
   }
 
-  await prisma.postWorkflowEvent.deleteMany({});
-  await prisma.postRevision.deleteMany({});
-  await prisma.postBlock.deleteMany({});
-  await prisma.postMedia.deleteMany({});
-  await prisma.postSeo.deleteMany({});
-  await prisma.postStats.deleteMany({});
-  await prisma.postReaction.deleteMany({});
-  await prisma.bookmark.deleteMany({});
-  await prisma.comment.deleteMany({});
   await prisma.postTag.deleteMany({});
   await prisma.media.deleteMany({});
   await prisma.caseUpdate.deleteMany({});
-  await prisma.telegramPublishLog.deleteMany({});
-  await prisma.telegramDraft.deleteMany({});
   await prisma.post.deleteMany({});
   await prisma.case.deleteMany({});
   await prisma.submission.deleteMany({});
@@ -55,7 +38,7 @@ async function main() {
     await prisma.category.upsert({ where: { slug: category.slug }, update: { ...category, isActive: true }, create: { ...category, isActive: true } });
   }
 
-  console.log("Cleanup completed. Editorial schema is clean, categories and owner account are preserved.");
+  console.log("Cleanup completed. The site now has no demo articles/cases/submissions.");
 }
 
 main().catch((error) => { console.error(error); process.exit(1); }).finally(async () => prisma.$disconnect());

@@ -9,63 +9,21 @@ export type NotificationPayload = {
   entityId?: string;
 };
 
-const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL || process.env.ADMIN_EMAIL || "mtzallqmy@gmail.com";
+const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL || process.env.ADMIN_EMAIL || "";
 const resendApiKey = process.env.RESEND_API_KEY || "";
-const emailFrom = process.env.EMAIL_FROM || process.env.RESEND_FROM_EMAIL || "Mada Alensan <onboarding@resend.dev>";
-const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN || "";
-const telegramAdminIds = (process.env.TELEGRAM_ADMIN_IDS || process.env.TELEGRAM_ADMIN_ID || "")
-  .split(",")
-  .map((id) => id.trim())
-  .filter(Boolean);
+const emailFrom = process.env.EMAIL_FROM || "Mada Al-Nas <onboarding@resend.dev>";
 
 function htmlEscape(value: string) {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-async function writeActivity(action: string, payload: NotificationPayload, metadata: Record<string, unknown>) {
-  await prisma.activityLog.create({
-    data: {
-      action,
-      entity: payload.entity,
-      entityId: payload.entityId,
-      metadata: {
-        subject: payload.subject,
-        title: payload.title,
-        lines: payload.lines,
-        ...metadata,
-      },
-    },
-  }).catch(() => null);
-}
+export async function notifyAdmin(payload: NotificationPayload) {
+  const metadata = { subject: payload.subject, title: payload.title, lines: payload.lines, entity: payload.entity, entityId: payload.entityId };
+  await prisma.activityLog.create({ data: { action: "notification.created", entity: payload.entity, entityId: payload.entityId, metadata } }).catch(() => null);
 
-async function sendTelegramAdminNotification(payload: NotificationPayload) {
-  if (!telegramBotToken || telegramAdminIds.length === 0) {
-    return { skipped: true, reason: "missing telegram env" };
-  }
-
-  const text = [`<b>${htmlEscape(payload.title)}</b>`, "", ...payload.lines.map(htmlEscape)].join("\n");
-  const results = [];
-
-  for (const chatId of telegramAdminIds) {
-    try {
-      const res = await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML", disable_web_page_preview: true }),
-      });
-      const data = await res.json().catch(() => null);
-      results.push({ chatId, ok: res.ok && data?.ok !== false, response: data });
-    } catch (error) {
-      results.push({ chatId, ok: false, error: error instanceof Error ? error.message : "unknown" });
-    }
-  }
-
-  return { skipped: false, results };
-}
-
-async function sendEmailAdminNotification(payload: NotificationPayload) {
   if (!adminEmail || !resendApiKey) {
-    return { skipped: true, reason: "missing email env" };
+    console.warn("Admin email notification skipped: ADMIN_NOTIFICATION_EMAIL/ADMIN_EMAIL or RESEND_API_KEY is missing");
+    return { skipped: true };
   }
 
   const text = [payload.title, "", ...payload.lines].join("\n");
@@ -78,24 +36,7 @@ async function sendEmailAdminNotification(payload: NotificationPayload) {
   });
 
   const data = await res.json().catch(() => null);
-  return { skipped: false, ok: res.ok && data?.error == null, response: data };
-}
-
-export async function notifyAdmin(payload: NotificationPayload) {
-  const result: Record<string, unknown> = {};
-  await writeActivity("notification.created", payload, { channel: "system" });
-
-  const telegram = await sendTelegramAdminNotification(payload).catch((error) => ({ ok: false, error: error instanceof Error ? error.message : "Telegram failed" }));
-  result.telegram = telegram;
-  await writeActivity("notification.telegram.result", payload, { telegram });
-
-  const email = await sendEmailAdminNotification(payload).catch((error) => ({ ok: false, error: error instanceof Error ? error.message : "Email failed" }));
-  result.email = email;
-  await writeActivity("notification.email.result", payload, { email });
-
-  if ((telegram as any)?.skipped && (email as any)?.skipped) {
-    console.warn("Admin notification skipped: Telegram and email env are missing");
-  }
-
-  return { ok: true, ...result };
+  await prisma.activityLog.create({ data: { action: res.ok ? "notification.email.sent" : "notification.email.failed", entity: payload.entity, entityId: payload.entityId, metadata: { provider: "resend", response: data } } }).catch(() => null);
+  if (!res.ok) return { skipped: false, ok: false, error: data?.message || "Email provider failed" };
+  return { ok: true };
 }

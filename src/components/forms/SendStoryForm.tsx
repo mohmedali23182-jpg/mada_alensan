@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Send, CheckCircle, Eye, EyeOff, Upload, AlertCircle } from "lucide-react";
-import { readJsonResponse } from "@/lib/http-json";
 
 const STORY_TYPES = ["قصة شخصية", "قصة عائلة", "قضية صحية", "قضية تعليمية", "نزوح أو تهجير", "فقر ومعاناة", "كفاح وصمود", "حالة عاجلة", "أخرى"];
 
@@ -23,7 +22,7 @@ export default function SendStoryForm() {
     formData.set("allowPublish", String(allowPublish));
     try {
       const res = await fetch("/api/submissions/story", { method: "POST", body: formData });
-      const data = await readJsonResponse(res);
+      const data = (await res.json()) as { ok?: boolean; message?: string };
       if (!res.ok || !data.ok) throw new Error(data.message || "تعذر إرسال القصة");
       setState("success");
       e.currentTarget.reset();

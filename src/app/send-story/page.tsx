@@ -3,11 +3,9 @@ import PageHero from "@/components/ui/PageHero";
 import SendStoryForm from "@/components/forms/SendStoryForm";
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
 export const metadata: Metadata = {
   title: "أرسل قصتك",
-  description: "شارك قصتك الإنسانية مع مدى الإنسان وسننقلها للعالم بكرامة.",
+  description: "شارك قصتك الإنسانية مع مدى الناس وسننقلها للعالم بكرامة.",
 };
 
 export default function SendStoryPage() {

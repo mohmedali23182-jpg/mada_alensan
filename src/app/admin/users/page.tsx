@@ -40,7 +40,7 @@ export default async function AdminUsersPage() {
           <input name="name" required placeholder="الاسم" className="input-field" />
           <input name="email" required type="email" placeholder="البريد" className="input-field" />
           <input name="password" required type="password" placeholder="كلمة المرور" className="input-field" />
-          <select name="role" className="input-field"><option value="OWNER">OWNER</option><option value="ADMIN">ADMIN</option><option value="EDITOR">EDITOR</option><option value="REVIEWER">REVIEWER</option><option value="AUTHOR">AUTHOR</option><option value="CONTRIBUTOR">CONTRIBUTOR</option><option value="FIELD_REPORTER">FIELD_REPORTER</option><option value="VIEWER">VIEWER</option></select>
+          <select name="role" className="input-field"><option value="OWNER">OWNER</option><option value="ADMIN">ADMIN</option><option value="EDITOR">EDITOR</option><option value="REVIEWER">REVIEWER</option><option value="CONTRIBUTOR">CONTRIBUTOR</option><option value="FIELD_REPORTER">FIELD_REPORTER</option><option value="VIEWER">VIEWER</option></select>
           <label className="rounded-xl bg-ivory-light px-4 py-3 text-sm font-bold"><input name="isActive" type="checkbox" defaultChecked /> نشط</label>
           <SubmitButton>حفظ المستخدم</SubmitButton>
         </form>
@@ -59,7 +59,7 @@ export default async function AdminUsersPage() {
                 <input name="name" defaultValue={user.name} className="input-field" />
                 <input name="email" type="email" defaultValue={user.email} className="input-field" />
                 <input name="password" type="password" placeholder="اتركها فارغة لعدم التغيير" className="input-field" />
-                <select name="role" defaultValue={user.role} className="input-field"><option value="OWNER">OWNER</option><option value="ADMIN">ADMIN</option><option value="EDITOR">EDITOR</option><option value="REVIEWER">REVIEWER</option><option value="AUTHOR">AUTHOR</option><option value="CONTRIBUTOR">CONTRIBUTOR</option><option value="FIELD_REPORTER">FIELD_REPORTER</option><option value="VIEWER">VIEWER</option></select>
+                <select name="role" defaultValue={user.role} className="input-field"><option value="OWNER">OWNER</option><option value="ADMIN">ADMIN</option><option value="EDITOR">EDITOR</option><option value="REVIEWER">REVIEWER</option><option value="CONTRIBUTOR">CONTRIBUTOR</option><option value="FIELD_REPORTER">FIELD_REPORTER</option><option value="VIEWER">VIEWER</option></select>
                 <label className="rounded-xl bg-white px-4 py-3 text-sm font-bold"><input name="isActive" type="checkbox" defaultChecked={user.isActive} /> نشط</label>
                 <SubmitButton>تحديث</SubmitButton>
               </form>

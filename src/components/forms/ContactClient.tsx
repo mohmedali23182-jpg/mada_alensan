@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Mail, Send, MessageCircle, CheckCircle, Globe, Camera, Video, AlertCircle } from "lucide-react";
 import type { ElementType } from "react";
 import { SOCIAL_LINKS } from "@/lib/social-links";
-import { readJsonResponse } from "@/lib/http-json";
 
 const iconMap: Record<string, ElementType> = {
   Facebook: Globe,
@@ -17,7 +16,7 @@ const iconMap: Record<string, ElementType> = {
 };
 
 const CONTACT_ITEMS = [
-  { icon: Mail, label: "البريد الإلكتروني", value: "mtzallqmy@gmail.com", href: "mailto:mtzallqmy@gmail.com", color: "#C99A3E" },
+  { icon: Mail, label: "البريد الإلكتروني", value: "info@madaalinsan.com", href: "mailto:info@madaalinsan.com", color: "#C99A3E" },
   { icon: MessageCircle, label: "واتساب", value: "للتواصل السريع", href: "https://wa.me/967xxxxxxxxx", color: "#25D366" },
   { icon: Send, label: "تليجرام", value: "@madaalinsan", href: "https://t.me/madaalinsan", color: "#2AABEE" },
 ];
@@ -35,7 +34,7 @@ export default function ContactClient() {
     const formData = new FormData(e.currentTarget);
     try {
       const res = await fetch("/api/contact", { method: "POST", body: formData });
-      const data = await readJsonResponse(res);
+      const data = (await res.json()) as { ok?: boolean; message?: string };
       if (!res.ok || !data.ok) throw new Error(data.message || "تعذر إرسال الرسالة");
       setState("success");
       e.currentTarget.reset();

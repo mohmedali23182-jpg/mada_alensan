@@ -12,13 +12,8 @@
     "prisma:studio": "prisma studio",
     "seed": "prisma db seed",
     "cleanup:demo": "tsx scripts/cleanup-demo-data.ts",
-    "db:push": "prisma db push --accept-data-loss",
-    "deploy:check": "prisma generate && next build",
-    "db:setup": "prisma generate && prisma db push --accept-data-loss && prisma db seed",
-    "db:verify": "tsx scripts/verify-db.ts",
-    "typecheck": "tsc --noEmit",
-    "db:clean:sql": "echo \"Run supabase/00-reset-public-clean.sql inside Supabase SQL Editor\"",
-    "db:verify:uuid": "tsx scripts/verify-uuid-db.ts"
+    "db:push": "prisma db push",
+    "deploy:check": "prisma generate && next build"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
