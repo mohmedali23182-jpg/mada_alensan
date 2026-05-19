@@ -19,7 +19,7 @@ export default function TelegramAdminPage() {
           <div className="rounded-2xl bg-white/10 p-3"><MessageCircle className="h-6 w-6" /></div>
           <div>
             <p className="text-sm text-white/70">إدارة التحرير عبر تليجرام</p>
-            <h1 className="font-kufi text-2xl font-black">بوت مدى الناس</h1>
+            <h1 className="font-kufi text-2xl font-black">بوت مدى الإنسان</h1>
           </div>
         </div>
         <p className="mt-4 max-w-3xl text-sm leading-7 text-white/75">

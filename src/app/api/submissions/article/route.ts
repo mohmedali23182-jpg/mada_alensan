@@ -10,8 +10,14 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   const body = await readBody(request);
-  const parsed = articleSubmissionSchema.safeParse(normalizeEmptyStrings((body.data || {}) as Record<string, unknown>));
-  if (!parsed.success) return NextResponse.json({ ok: false, errors: parsed.error.flatten() }, { status: 400 });
+  const raw = normalizeEmptyStrings((body.data || {}) as Record<string, unknown>);
+  const normalized = { ...raw, summary: raw.summary || raw.authorBio || raw.excerpt };
+  const parsed = articleSubmissionSchema.safeParse(normalized);
+  if (!parsed.success) {
+    const fieldErrors = parsed.error.flatten().fieldErrors;
+    const errors = Object.fromEntries(Object.entries(fieldErrors).map(([key, value]) => [key, value?.[0] || "قيمة غير صحيحة"]));
+    return NextResponse.json({ ok: false, message: "يرجى مراجعة الحقول المطلوبة.", errors }, { status: 400 });
+  }
 
   const item = await prisma.submission.create({
     data: {
@@ -40,7 +46,7 @@ export async function POST(request: Request) {
 
   await notifyAdmin({
     subject: `مقال جديد بانتظار المراجعة: ${parsed.data.title}`,
-    title: "وصل مقال جديد إلى مدى الناس",
+    title: "وصل مقال جديد إلى مدى الإنسان",
     entity: "Submission",
     entityId: item.id,
     lines: [
@@ -52,5 +58,5 @@ export async function POST(request: Request) {
     ],
   }).catch(() => null);
 
-  return NextResponse.json({ ok: true, id: item.id, warnings });
+  return NextResponse.json({ ok: true, id: item.id, warnings, message: "تم إرسال المقال بنجاح، سنراجعه قبل النشر." });
 }

@@ -4,6 +4,36 @@ import { useState } from "react";
 import { Send, CheckCircle, Upload, AlertCircle } from "lucide-react";
 
 type FormState = "idle" | "loading" | "success" | "error";
+type ApiResponse = { ok?: boolean; message?: string; errors?: Record<string, string | string[]> };
+
+const fieldLabels: Record<string, string> = {
+  fullName: "الاسم الكامل",
+  email: "البريد الإلكتروني",
+  phone: "رقم واتساب",
+  summary: "نبذة الكاتب",
+  title: "عنوان المقال",
+  body: "نص المقال",
+  socialUrl: "الرابط الاجتماعي",
+};
+
+async function readJsonSafely(response: Response): Promise<ApiResponse> {
+  const text = await response.text();
+  if (!text) return { ok: false, message: "رد غير صالح من الخادم" };
+  try {
+    return JSON.parse(text) as ApiResponse;
+  } catch {
+    return { ok: false, message: "رد غير صالح من الخادم" };
+  }
+}
+
+function firstErrorMessage(data: ApiResponse) {
+  if (data.message) return data.message;
+  const errors = data.errors || {};
+  const [field, value] = Object.entries(errors)[0] || [];
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (!raw) return "تعذر إرسال المقال";
+  return field && fieldLabels[field] ? `${fieldLabels[field]}: ${raw}` : raw;
+}
 
 export default function WriteForm() {
   const [state, setState] = useState<FormState>("idle");
@@ -12,16 +42,17 @@ export default function WriteForm() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const form = e.currentTarget;
     setState("loading");
     setMessage("");
-    const formData = new FormData(e.currentTarget);
+    const formData = new FormData(form);
     formData.set("allowPublish", String(publishWithName));
     try {
       const res = await fetch("/api/submissions/article", { method: "POST", body: formData });
-      const data = (await res.json()) as { ok?: boolean; message?: string };
-      if (!res.ok || !data.ok) throw new Error(data.message || "تعذر إرسال المقال");
+      const data = await readJsonSafely(res);
+      if (!res.ok || !data.ok) throw new Error(firstErrorMessage(data));
       setState("success");
-      e.currentTarget.reset();
+      form.reset();
     } catch (error) {
       setState("error");
       setMessage(error instanceof Error ? error.message : "حدث خطأ غير متوقع");
@@ -57,16 +88,16 @@ export default function WriteForm() {
         <div className="bg-ivory rounded-xl p-5 space-y-4">
           <h3 className="text-sm font-bold font-cairo text-navy border-b border-ivory-dark pb-2">معلومات الكاتب</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><label className="label-field">الاسم الكامل <span className="text-urgent">*</span></label><input name="fullName" type="text" className="input-field" required /></div>
+            <div><label className="label-field">الاسم الكامل <span className="text-urgent">*</span></label><input name="fullName" type="text" className="input-field" minLength={2} required /></div>
             <div><label className="label-field">البريد الإلكتروني <span className="text-urgent">*</span></label><input name="email" type="email" className="input-field ltr" dir="ltr" required /></div>
           </div>
           <div><label className="label-field">رقم واتساب</label><input name="phone" type="tel" className="input-field ltr" dir="ltr" /></div>
-          <div><label className="label-field">نبذة قصيرة عن الكاتب</label><textarea name="authorBio" className="textarea-field min-h-[80px]" rows={3} /></div>
+          <div><label className="label-field">نبذة قصيرة عن الكاتب <span className="text-xs text-text-muted">اختيارية</span></label><textarea name="summary" className="textarea-field min-h-[80px]" rows={3} placeholder="اختياري. إذا كتبتها فلتكن 5 أحرف فأكثر." /></div>
           <div>
-            <label className="label-field">صورة الكاتب</label>
+            <label className="label-field">صورة الكاتب <span className="text-xs text-text-muted">اختيارية</span></label>
             <label className="block border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:border-gold/40 transition-colors cursor-pointer focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/20">
               <Upload size={18} className="text-gold mx-auto mb-1.5" />
-              <p className="text-xs text-text-muted font-tajawal">اضغط لاختيار صورة شخصية</p>
+              <p className="text-xs text-text-muted font-tajawal">اضغط لاختيار صورة شخصية، ولن نستخدم أي صورة وهمية إذا لم ترفع صورة.</p>
               <input name="avatar" type="file" className="sr-only" accept="image/*" />
             </label>
           </div>
@@ -75,14 +106,14 @@ export default function WriteForm() {
 
         <div className="bg-ivory rounded-xl p-5 space-y-4">
           <h3 className="text-sm font-bold font-cairo text-navy border-b border-ivory-dark pb-2">معلومات المقال</h3>
-          <div><label className="label-field">عنوان المقال <span className="text-urgent">*</span></label><input name="title" type="text" className="input-field" required /></div>
-          <div><label className="label-field">ملخص المقال</label><textarea name="summary" className="textarea-field min-h-[80px]" rows={3} /></div>
-          <div><label className="label-field">نص المقال <span className="text-urgent">*</span></label><textarea name="body" className="textarea-field" required rows={12} /></div>
+          <div><label className="label-field">عنوان المقال <span className="text-urgent">*</span></label><input name="title" type="text" className="input-field" minLength={5} required /></div>
+          <div><label className="label-field">ملخص المقال</label><textarea name="excerpt" className="textarea-field min-h-[80px]" rows={3} /></div>
+          <div><label className="label-field">نص المقال <span className="text-urgent">*</span></label><textarea name="body" className="textarea-field" required minLength={20} rows={12} /></div>
           <div>
-            <label className="label-field">صورة غلاف</label>
+            <label className="label-field">صورة غلاف <span className="text-xs text-text-muted">اختيارية - المقاس المثالي 1600×900</span></label>
             <label className="block border-2 border-dashed border-gray-200 rounded-xl p-5 text-center hover:border-gold/40 transition-colors cursor-pointer focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/20">
               <Upload size={20} className="text-gold mx-auto mb-2" />
-              <p className="text-sm text-text-muted font-tajawal">اضغط لاختيار صورة الغلاف</p>
+              <p className="text-sm text-text-muted font-tajawal">اضغط لاختيار صورة الغلاف بنسبة 16:9. إذا لم ترفع صورة لن نختار صورة وهمية.</p>
               <input name="coverImage" type="file" className="sr-only" accept="image/*" />
             </label>
           </div>

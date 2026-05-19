@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "بلّغ عن حالة",
-  description: "أرسل بلاغاً عن حالة إنسانية عاجلة وسيتابعها فريق مدى الناس.",
+  description: "أرسل بلاغاً عن حالة إنسانية عاجلة وسيتابعها فريق مدى الإنسان.",
 };
 
 export default function ReportPage() {

@@ -1,20 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-label="غلاف مدى الإنسان">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0d1b2a"/>
-      <stop offset="0.55" stop-color="#13283d"/>
-      <stop offset="1" stop-color="#d0a040"/>
-    </linearGradient>
-    <radialGradient id="r" cx="0.75" cy="0.25" r="0.6">
-      <stop offset="0" stop-color="#f4dfaa" stop-opacity="0.42"/>
-      <stop offset="1" stop-color="#f4dfaa" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <rect width="1200" height="675" fill="url(#g)"/>
-  <rect width="1200" height="675" fill="url(#r)"/>
-  <path d="M170 510c175-185 342-244 501-177 135 57 236 32 359-75" fill="none" stroke="#f4dfaa" stroke-opacity="0.22" stroke-width="34" stroke-linecap="round"/>
-  <circle cx="210" cy="165" r="74" fill="#f4dfaa" opacity="0.10"/>
-  <circle cx="968" cy="505" r="118" fill="#f4dfaa" opacity="0.11"/>
-  <text x="600" y="318" text-anchor="middle" fill="#fff8e8" font-size="58" font-family="Arial, sans-serif" font-weight="700">مدى الإنسان</text>
-  <text x="600" y="378" text-anchor="middle" fill="#f4dfaa" font-size="28" font-family="Arial, sans-serif">منصة إنسانية، فكرية، ثقافية</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-label="مدى الإنسان">
+  <defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#0D1B2A"/><stop offset="1" stop-color="#2F8F6B"/></linearGradient></defs>
+  <rect width="1600" height="900" fill="#F7F4ED"/>
+  <rect x="80" y="80" width="1440" height="740" rx="44" fill="url(#g)" opacity="0.97"/>
+  <path d="M482 585c120-95 245-95 318 0 73-95 198-95 318 0" fill="none" stroke="#C9A24E" stroke-width="28" stroke-linecap="round"/>
+  <path d="M520 626c105-78 213-78 280 0 67-78 175-78 280 0" fill="none" stroke="#fff" stroke-width="20" stroke-linecap="round" opacity="0.92"/>
+  <circle cx="800" cy="352" r="54" fill="#C9A24E"/>
+  <path d="M748 528c13-110 64-174 150-218-37 70-47 143-18 220-51-26-89-26-132-2z" fill="#fff" opacity="0.95"/>
+  <text x="800" y="735" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-size="58" font-weight="700">مدى الإنسان</text>
+  <text x="800" y="790" text-anchor="middle" fill="#F7F4ED" font-family="Arial, sans-serif" font-size="30">إنسانية - اجتماعية - ثقافية - علمية - متنوعة</text>
 </svg>

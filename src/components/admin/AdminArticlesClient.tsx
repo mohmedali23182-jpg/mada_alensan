@@ -90,9 +90,40 @@ function inferExcerpt(content: string) {
 
 async function apiJson(path: string, init?: RequestInit) {
   const res = await fetch(path, { ...init, headers: { "Content-Type": "application/json", ...(init?.headers || {}) } });
-  const data = await res.json().catch(() => null);
-  if (!res.ok || data?.ok === false) throw new Error(data?.message || "فشل تنفيذ الطلب");
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+  if (!res.ok || data?.ok === false) {
+    const fieldMessage = data?.errors ? Object.values(data.errors as Record<string, string | string[]>).flat()[0] : null;
+    throw new Error(data?.message || String(fieldMessage || "فشل تنفيذ الطلب"));
+  }
   return data;
+}
+
+function validateCoverImage(file: File) {
+  if (!file.type.startsWith("image/")) return Promise.resolve();
+  return new Promise<void>((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const ratio = img.width / img.height;
+      const ideal = 16 / 9;
+      if (img.width < 1200 || img.height < 675) {
+        reject(new Error("مقاس الغلاف صغير. المقاس المطلوب 1600×900 أو على الأقل 1200×675."));
+        return;
+      }
+      if (Math.abs(ratio - ideal) > 0.08) {
+        reject(new Error("نسبة الغلاف غير مناسبة. استخدم صورة 16:9 مثل 1600×900."));
+        return;
+      }
+      resolve();
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("تعذر قراءة أبعاد الصورة."));
+    };
+    img.src = url;
+  });
 }
 
 function uploadFile(file: File, folder: string) {
@@ -217,6 +248,7 @@ export default function AdminArticlesClient({ initialPosts, initialCategories }:
   async function onUpload(file: File, target: "coverImage" | "thumbnail" | "content") {
     setMessage("جاري رفع الملف...");
     try {
+      if (target === "coverImage" || target === "thumbnail") await validateCoverImage(file);
       const media = await uploadFile(file, target === "content" ? "article-body" : "article-covers");
       if (target === "content") {
         setForm((prev) => ({ ...prev, content: `${prev.content}\n<figure><img src="${media.url}" alt="صورة داخل المقال" loading="lazy" decoding="async" /><figcaption></figcaption></figure>` }));
@@ -238,7 +270,7 @@ export default function AdminArticlesClient({ initialPosts, initialCategories }:
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
               <h2 className="font-cairo text-xl font-black text-navy">محرر المقالات المتقدم</h2>
-              <p className="text-sm text-navy/60">محرر بلوكات HTML آمن ومتوافق مع Vercel بدون إضافة حزم تكسر lockfile.</p>
+              <p className="text-sm text-navy/60">محرر سريع وآمن. مقاس الغلاف المثالي: 1600×900 بنسبة 16:9، والحد الأدنى 1200×675.</p>
             </div>
             <button onClick={() => { setForm(emptyArticle); setSelectedId(null); }} className="rounded-full bg-ivory px-4 py-2 text-sm font-bold text-navy"><Plus size={15} className="inline" /> جديد</button>
           </div>
@@ -280,7 +312,8 @@ export default function AdminArticlesClient({ initialPosts, initialCategories }:
           <input className="input-field" placeholder="الدولة" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} />
           <textarea className="textarea-field min-h-[70px]" placeholder="اقتباس بارز" value={form.quote} onChange={(e) => setForm({ ...form, quote: e.target.value })} />
           <div className="space-y-2">
-            <input className="input-field" dir="ltr" placeholder="رابط الغلاف" value={form.coverImage} onChange={(e) => setForm({ ...form, coverImage: e.target.value })} />
+            <input className="input-field" dir="ltr" placeholder="رابط الغلاف الاختياري - الأفضل رفع صورة 1600×900" value={form.coverImage} onChange={(e) => setForm({ ...form, coverImage: e.target.value })} />
+            <p className="text-xs leading-6 text-navy/55">الغلاف اختياري. إن لم تضف غلافًا سيظهر قالب محلي بسيط لا صورة وهمية من الإنترنت.</p>
             <label className="flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed border-navy/20 p-3 text-sm font-bold text-navy/70"><Upload size={16} /> رفع غلاف<input className="hidden" type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && onUpload(e.target.files[0], "coverImage")} /></label>
           </div>
           <label className="flex items-center gap-2 text-sm font-bold"><input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} /> مقال مميز</label>

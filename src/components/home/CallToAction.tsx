@@ -41,7 +41,7 @@ export default function CallToAction() {
           </h2>
           <div className="w-14 h-1 rounded-full bg-gold mx-auto mb-3" />
           <p className="text-text-light text-sm font-tajawal max-w-xl mx-auto">
-            مدى الناس منصة من الناس وللناس. كل مشاركة تُحدث فرقاً حقيقياً.
+            مدى الإنسان منصة من الناس وللناس. كل مشاركة تُحدث فرقاً حقيقياً.
           </p>
         </div>
 

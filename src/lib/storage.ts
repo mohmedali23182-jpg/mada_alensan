@@ -37,7 +37,7 @@ export function assertAllowedUpload(mimeType: string, sizeBytes: number) {
 
 export async function uploadToStorage(file: File, folder = "uploads") {
   assertAllowedUpload(file.type || "application/octet-stream", file.size);
-  const bucket = process.env.SUPABASE_STORAGE_BUCKET || "mada-media";
+  const bucket = process.env.SUPABASE_STORAGE_BUCKET || "media";
   const supabase = createServiceSupabaseClient();
   const path = `${cleanFolder(folder)}/${Date.now()}-${crypto.randomUUID()}-${safeFilename(file.name)}`;
   const { error } = await supabase.storage.from(bucket).upload(path, file, { contentType: file.type, upsert: false });
@@ -48,7 +48,7 @@ export async function uploadToStorage(file: File, folder = "uploads") {
 
 export async function uploadBufferToStorage(buffer: Buffer, filename: string, mimeType = "application/octet-stream", folder = "uploads") {
   assertAllowedUpload(mimeType, buffer.length);
-  const bucket = process.env.SUPABASE_STORAGE_BUCKET || "mada-media";
+  const bucket = process.env.SUPABASE_STORAGE_BUCKET || "media";
   const supabase = createServiceSupabaseClient();
   const path = `${cleanFolder(folder)}/${Date.now()}-${crypto.randomUUID()}-${safeFilename(filename)}`;
   const { error } = await supabase.storage.from(bucket).upload(path, buffer, { contentType: mimeType, upsert: false });

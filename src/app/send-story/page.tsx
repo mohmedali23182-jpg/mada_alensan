@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "أرسل قصتك",
-  description: "شارك قصتك الإنسانية مع مدى الناس وسننقلها للعالم بكرامة.",
+  description: "شارك قصتك الإنسانية مع مدى الإنسان وسننقلها للعالم بكرامة.",
 };
 
 export default function SendStoryPage() {

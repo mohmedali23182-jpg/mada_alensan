@@ -24,7 +24,7 @@ async function upsertAdmin(email: string, password: string, name: string, role: 
 async function main() {
   const adminEmail = process.env.ADMIN_EMAIL || "admin@madannas.org";
   const adminPassword = process.env.ADMIN_PASSWORD || "change-this-strong-password";
-  const adminName = process.env.ADMIN_NAME || "مدير مدى الناس";
+  const adminName = process.env.ADMIN_NAME || "مدير مدى الإنسان";
 
   await upsertAdmin(adminEmail, adminPassword, adminName, UserRole.OWNER);
   const moatazPassword = process.env.MOATAZ_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD;
@@ -49,8 +49,8 @@ async function main() {
 
   await prisma.siteSetting.upsert({
     where: { key: "site_identity" },
-    update: { value: { name: "مدى الناس", slogan: "نمدّ صوت الإنسان… حتى لا تبقى القصة وحيدة" } },
-    create: { key: "site_identity", value: { name: "مدى الناس", slogan: "نمدّ صوت الإنسان… حتى لا تبقى القصة وحيدة" } },
+    update: { value: { name: "مدى الإنسان", slogan: "نمدّ صوت الإنسان… حتى لا تبقى القصة وحيدة" } },
+    create: { key: "site_identity", value: { name: "مدى الإنسان", slogan: "نمدّ صوت الإنسان… حتى لا تبقى القصة وحيدة" } },
   });
 
   await prisma.siteSetting.upsert({

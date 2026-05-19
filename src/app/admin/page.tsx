@@ -52,7 +52,7 @@ export default async function AdminPage() {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <AdminSection title="آخر المقالات" description="آخر ما أضيف عبر الإدارة أو بوت تليجرام، مع روابط عرض مباشرة للمقالات المنشورة.">
+        <AdminSection title="آخر المقالات" description="آخر ما أضيف عبر الإدارة أو أداة الإدارة، مع روابط عرض مباشرة للمقالات المنشورة.">
           <div className="space-y-3">
             {latestPosts.length ? latestPosts.map((article) => (
               <div key={article.id} className="rounded-2xl bg-ivory-light p-4">

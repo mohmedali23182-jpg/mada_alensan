@@ -14,7 +14,7 @@ export type TelegramUpdate = { update_id: number; message?: TelegramMessage; cal
 type DraftData = { title?: string; excerpt?: string; content?: string; authorName?: string; contributorId?: string; coverImage?: string; categoryId?: string; categoryName?: string; scheduledAt?: string | null };
 
 const botToken = process.env.TELEGRAM_BOT_TOKEN || "";
-const channelId = process.env.TELEGRAM_CHANNEL_ID || "";
+const channelId = process.env.TELEGRAM_ARTICLES_CHANNEL_ID || process.env.TELEGRAM_CHANNEL_ID || process.env.TELEGRAM_CACHE_CHANNEL_ID || "";
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 function telegramApi(method: string) {
@@ -121,7 +121,7 @@ async function uploadTelegramPhoto(message: TelegramMessage) {
 async function ensureContributor(name?: string) {
   if (!name) return null;
   const slug = makeSlug(name);
-  return prisma.contributor.upsert({ where: { slug }, update: { name, isActive: true }, create: { name, slug, bio: "كاتب عبر بوت تليجرام", isActive: true } });
+  return prisma.contributor.upsert({ where: { slug }, update: { name, isActive: true }, create: { name, slug, isActive: true } });
 }
 
 async function defaultCategory() {
@@ -146,10 +146,11 @@ async function publishDraft(chatId: string, data: DraftData) {
   const shouldPublishNow = !scheduledAt || scheduledAt.getTime() <= Date.now();
   const content = sanitizeRichHtml(data.content.includes("<") ? data.content : plainTextToHtml(data.content));
   const plain = stripHtml(content);
+  const slug = await uniquePostSlug(data.title);
   const post = await prisma.post.create({
     data: {
       title: data.title,
-      slug: await uniquePostSlug(data.title),
+      slug,
       excerpt: data.excerpt || plain.slice(0, 220),
       content,
       coverImage: data.coverImage,
@@ -169,7 +170,7 @@ async function publishDraft(chatId: string, data: DraftData) {
       twitterTitle: data.title,
       twitterDescription: data.excerpt || plain.slice(0, 160),
       twitterImage: data.coverImage,
-      canonicalUrl: `${siteUrl.replace(/\/$/, "")}/articles/${await uniquePostSlug(data.title)}`,
+      canonicalUrl: `${siteUrl.replace(/\/$/, "")}/articles/${slug}`,
     },
   });
   if (shouldPublishNow) {
@@ -186,9 +187,11 @@ export async function publishPostToTelegramChannel(postId: string) {
   if (!post || post.status !== "PUBLISHED") return { skipped: true, reason: "post not publishable" };
   const alreadySent = await prisma.telegramPublishLog.findFirst({ where: { postId, status: "sent" }, select: { id: true, messageId: true } });
   if (alreadySent) return { skipped: true, reason: "already sent to Telegram", messageId: alreadySent.messageId };
-  const url = `${siteUrl.replace(/\/$/, "")}/articles/${post.slug}`;
-  const caption = [`📰 <b>${escapeHtml(post.title)}</b>`, post.excerpt ? `\n${escapeHtml(post.excerpt)}` : "", post.contributor?.name ? `\n✍️ ${escapeHtml(post.contributor.name)}` : "\n✍️ فريق التحرير", post.category?.name ? `\n🏷️ ${escapeHtml(post.category.name)}` : "", `\n🔗 ${url}`].join("");
-  const keyboard = { inline_keyboard: [[{ text: "فتح المقال", url }], [{ text: "إخفاء", callback_data: `post:ARCHIVED:${post.id}` }, { text: "مسودة", callback_data: `post:DRAFT:${post.id}` }]] };
+  const baseUrl = siteUrl.replace(/\/$/, "");
+  const url = `${baseUrl}/articles/${post.slug}`;
+  const editUrl = `${baseUrl}/admin/articles?post=${post.id}`;
+  const caption = [`📰 <b>${escapeHtml(post.title)}</b>`, post.excerpt ? `\n${escapeHtml(post.excerpt)}` : "", post.contributor?.name ? `\n✍️ ${escapeHtml(post.contributor.name)}` : "\n✍️ فريق التحرير", post.category?.name ? `\n🏷️ ${escapeHtml(post.category.name)}` : "", `\n🔗 الرابط الرسمي: ${url}`].join("");
+  const keyboard = { inline_keyboard: [[{ text: "تصفح المقال", url }, { text: "رابط التعديل", url: editUrl }], [{ text: "إخفاء", callback_data: `post:ARCHIVED:${post.id}` }, { text: "مسودة", callback_data: `post:DRAFT:${post.id}` }]] };
   try {
     const result = post.coverImage ? await sendTelegramPhoto(channelId, post.coverImage, caption, { reply_markup: keyboard }) : await sendTelegramMessage(channelId, caption, { reply_markup: keyboard });
     const messageId = String(result?.result?.message_id || "");
@@ -333,7 +336,9 @@ export async function handleTelegramUpdate(update: TelegramUpdate) {
   if (draft.step === "CONFIRM") {
     if (!["تأكيد", "confirm", "نعم"].includes(text.toLowerCase())) { await sendTelegramMessage(chatId, "اكتب: تأكيد للنشر أو /cancel للإلغاء."); return { ok: true }; }
     const post = await publishDraft(chatId, data);
-    await sendTelegramMessage(chatId, post.status === "PUBLISHED" ? `تم نشر المقال: ${siteUrl}/articles/${post.slug}` : `تمت جدولة المقال للنشر لاحقًا: ${post.title}`);
+    await sendTelegramMessage(chatId, post.status === "PUBLISHED" ? `تم نشر المقال.
+الرابط الرسمي: ${siteUrl}/articles/${post.slug}
+رابط التعديل: ${siteUrl}/admin/articles?post=${post.id}` : `تمت جدولة المقال للنشر لاحقًا: ${post.title}`);
     return { ok: true };
   }
   await sendTelegramMessage(chatId, "اكتب /newpost لإنشاء مقال جديد أو /quickpost للنشر السريع أو /help للأوامر.");

@@ -1,6 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240" role="img" aria-label="صورة كاتب افتراضية">
-  <rect width="240" height="240" rx="120" fill="#f8f2e8"/>
-  <circle cx="120" cy="92" r="38" fill="#0d1b2a" opacity="0.92"/>
-  <path d="M54 203c9-39 36-63 66-63s57 24 66 63" fill="#0d1b2a" opacity="0.92"/>
-  <circle cx="187" cy="58" r="20" fill="#d0a040" opacity="0.85"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="كاتب">
+ <rect width="512" height="512" rx="120" fill="#F7F4ED"/>
+ <circle cx="256" cy="188" r="78" fill="#C9A24E"/>
+ <path d="M120 414c20-82 74-126 136-126s116 44 136 126" fill="#0D1B2A" opacity="0.95"/>
 </svg>
