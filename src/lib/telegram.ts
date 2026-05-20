@@ -11,6 +11,10 @@ type TelegramMessage = { message_id: number; chat: { id: number; type: string };
 type TelegramCallbackQuery = { id: string; from: TelegramUser; message?: TelegramMessage; data?: string };
 export type TelegramUpdate = { update_id: number; message?: TelegramMessage; callback_query?: TelegramCallbackQuery };
 
+type TelegramInlineKeyboardButton =
+  | { text: string; callback_data: string }
+  | { text: string; url: string };
+
 type DraftData = { title?: string; excerpt?: string; content?: string; authorName?: string; contributorId?: string; coverImage?: string; categoryId?: string; categoryName?: string; scheduledAt?: string | null };
 
 const botToken = process.env.TELEGRAM_BOT_TOKEN || "";
@@ -191,7 +195,12 @@ export async function publishPostToTelegramChannel(postId: string) {
   const url = `${baseUrl}/articles/${post.slug}`;
   const editUrl = `${baseUrl}/admin/articles?post=${post.id}`;
   const caption = [`📰 <b>${escapeHtml(post.title)}</b>`, post.excerpt ? `\n${escapeHtml(post.excerpt)}` : "", post.contributor?.name ? `\n✍️ ${escapeHtml(post.contributor.name)}` : "\n✍️ فريق التحرير", post.category?.name ? `\n🏷️ ${escapeHtml(post.category.name)}` : "", `\n🔗 الرابط الرسمي: ${url}`].join("");
-  const keyboard = { inline_keyboard: [[{ text: "تصفح المقال", url }, { text: "رابط التعديل", url: editUrl }], [{ text: "إخفاء", callback_data: `post:ARCHIVED:${post.id}` }, { text: "مسودة", callback_data: `post:DRAFT:${post.id}` }]] };
+  const buttons: TelegramInlineKeyboardButton[][] = [
+    [{ text: "تصفح المقال", url }, { text: "رابط التعديل", url: editUrl }],
+    [{ text: "إخفاء", callback_data: `post:ARCHIVED:${post.id}` }, { text: "مسودة", callback_data: `post:DRAFT:${post.id}` }]
+  ];
+  
+  const keyboard = { inline_keyboard: buttons };
   try {
     const result = post.coverImage ? await sendTelegramPhoto(channelId, post.coverImage, caption, { reply_markup: keyboard }) : await sendTelegramMessage(channelId, caption, { reply_markup: keyboard });
     const messageId = String(result?.result?.message_id || "");
@@ -238,7 +247,18 @@ async function createQuickPost(chatId: string, text: string) {
       seoDescription: stripHtml(content).slice(0, 160),
     },
   });
-  await sendTelegramMessage(chatId, `تم إنشاء مسودة سريعة: ${escapeHtml(post.title)}`, { reply_markup: { inline_keyboard: [[{ text: "نشر الآن", callback_data: `post:PUBLISHED:${post.id}` }, { text: "حذف", callback_data: `post:DELETE:${post.id}` }]] } });
+  const buttons: TelegramInlineKeyboardButton[][] = [
+    [{ text: "نشر الآن", callback_data: `post:PUBLISHED:${post.id}` }, { text: "حذف", callback_data: `post:DELETE:${post.id}` }]
+  ];
+  
+  if (post.slug) {
+    buttons.unshift([
+      { text: "فتح المسودة", url: `${siteUrl}/articles/${post.slug}` },
+      { text: "فتح في الأدمن", url: `${siteUrl}/admin/articles?post=${post.id}` },
+    ]);
+  }
+
+  await sendTelegramMessage(chatId, `تم إنشاء مسودة سريعة: ${escapeHtml(post.title)}`, { reply_markup: { inline_keyboard: buttons } });
   return { ok: true, postId: post.id };
 }
 
@@ -336,9 +356,24 @@ export async function handleTelegramUpdate(update: TelegramUpdate) {
   if (draft.step === "CONFIRM") {
     if (!["تأكيد", "confirm", "نعم"].includes(text.toLowerCase())) { await sendTelegramMessage(chatId, "اكتب: تأكيد للنشر أو /cancel للإلغاء."); return { ok: true }; }
     const post = await publishDraft(chatId, data);
-    await sendTelegramMessage(chatId, post.status === "PUBLISHED" ? `تم نشر المقال.
-الرابط الرسمي: ${siteUrl}/articles/${post.slug}
-رابط التعديل: ${siteUrl}/admin/articles?post=${post.id}` : `تمت جدولة المقال للنشر لاحقًا: ${post.title}`);
+    const postId = post.id;
+    const slug = post.slug;
+    const buttons: TelegramInlineKeyboardButton[][] = [
+      [{ text: "نشر", callback_data: `post:PUBLISH:${postId}` }],
+      [{ text: "تعديل", callback_data: `post:EDIT:${postId}` }],
+      [{ text: "حذف", callback_data: `post:DELETE:${postId}` }],
+    ];
+
+    if (slug) {
+      buttons.unshift([
+        { text: "فتح المقال", url: `${siteUrl}/articles/${slug}` },
+        { text: "فتح في الأدمن", url: `${siteUrl}/admin/articles?post=${postId}` },
+      ]);
+    }
+
+    await sendTelegramMessage(chatId, post.status === "PUBLISHED" ? `تم نشر المقال بنجاح.` : `تمت جدولة المقال للنشر لاحقًا: ${post.title}`, {
+      reply_markup: { inline_keyboard: buttons }
+    });
     return { ok: true };
   }
   await sendTelegramMessage(chatId, "اكتب /newpost لإنشاء مقال جديد أو /quickpost للنشر السريع أو /help للأوامر.");
