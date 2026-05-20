@@ -418,3 +418,11 @@ model TelegramPublishLog {
   @@index([postId])
   @@index([createdAt])
 }
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+

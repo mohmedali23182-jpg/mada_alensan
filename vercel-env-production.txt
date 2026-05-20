@@ -3,13 +3,13 @@ Mada Alinsan - Vercel Production Environment Variables
 Instructions: Add these variables to Vercel Project Settings > Environment Variables.
 Make sure to select 'Production' environment.
 
-TELEGRAM_BOT_TOKEN=8744838426:AAGzHcc-eh-rzF30-qwDrCx2XumTZ5lHquw
+TELEGRAM_BOT_TOKEN=
 TELEGRAM_ADMIN_ID=8185788415
 TELEGRAM_ADMIN_IDS=8185788415
 TELEGRAM_CHANNEL_ID=-1003956105586
 TELEGRAM_CACHE_CHANNEL_ID=-1003956105586
 TELEGRAM_ARTICLES_CHANNEL_ID=-1003956105586
-TELEGRAM_WEBHOOK_SECRET=madaalinsan_telegram_webhook_secret_2026_8185788415
+TELEGRAM_WEBHOOK_SECRET=
 
 NEXT_PUBLIC_APP_URL=https://mada-alensan.vercel.app
 NEXT_PUBLIC_SITE_URL=https://mada-alensan.vercel.app

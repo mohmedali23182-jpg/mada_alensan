@@ -4,7 +4,13 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { prisma } from "./prisma";
 
 const cookieName = process.env.SESSION_COOKIE_NAME || "mada_session";
-const secret = process.env.AUTH_SECRET || "dev-secret-change-me";
+function getAuthSecret() {
+  const value = process.env.AUTH_SECRET;
+  if (!value && process.env.NODE_ENV === "production") {
+    throw new Error("AUTH_SECRET is required in production");
+  }
+  return value || "dev-secret-change-me";
+}
 
 type SessionPayload = {
   userId: string;
@@ -18,7 +24,7 @@ function base64url(input: string) {
 }
 
 function sign(data: string) {
-  return createHmac("sha256", secret).update(data).digest("base64url");
+  return createHmac("sha256", getAuthSecret()).update(data).digest("base64url");
 }
 
 export function createSessionToken(payload: Omit<SessionPayload, "exp">, maxAgeSeconds = 60 * 60 * 24 * 7) {
@@ -31,7 +37,10 @@ export function verifySessionToken(token?: string): SessionPayload | null {
   const [body, sig] = token.split(".");
   const expected = sign(body);
   try {
-    if (!timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return null;
+    const sigBuffer = Buffer.from(sig);
+    const expectedBuffer = Buffer.from(expected);
+    if (sigBuffer.length !== expectedBuffer.length) return null;
+    if (!timingSafeEqual(sigBuffer, expectedBuffer)) return null;
     const payload = JSON.parse(Buffer.from(body, "base64url").toString("utf8")) as SessionPayload;
     if (!payload.exp || payload.exp < Math.floor(Date.now() / 1000)) return null;
     return payload;

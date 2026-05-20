@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     update = (await request.json()) as TelegramUpdate;
   } catch (error) {
     console.error("Telegram webhook received invalid JSON", error);
-    return NextResponse.json({ ok: false, error: "Invalid Telegram payload" }, { status: 400 });
+    return NextResponse.json({ ok: true, error: "Invalid Telegram payload" });
   }
 
   try {

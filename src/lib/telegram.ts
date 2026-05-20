@@ -12,8 +12,8 @@ type TelegramCallbackQuery = { id: string; from: TelegramUser; message?: Telegra
 export type TelegramUpdate = { update_id: number; message?: TelegramMessage; callback_query?: TelegramCallbackQuery };
 
 type TelegramInlineKeyboardButton =
-  | { text: string; callback_data: string }
-  | { text: string; url: string };
+  | { text: string; callback_data: string; url?: never }
+  | { text: string; url: string; callback_data?: never };
 
 type DraftData = { title?: string; excerpt?: string; content?: string; authorName?: string; contributorId?: string; coverImage?: string; categoryId?: string; categoryName?: string; scheduledAt?: string | null };
 
@@ -220,9 +220,27 @@ async function showCategories(chatId: string) {
 
 function parseQuickPost(text: string) {
   const cleaned = text.replace(/^\/quickpost\s*/i, "").trim();
-  const [titleLine, ...bodyLines] = cleaned.split("\n").map((line) => line.trim()).filter(Boolean);
-  if (!titleLine || bodyLines.join("\n").length < 20) return null;
-  return { title: titleLine.replace(/^#\s*/, ""), content: bodyLines.join("\n\n") };
+  
+  // 1. Try splitting by pipe character '|'
+  if (cleaned.includes("|")) {
+    const parts = cleaned.split("|");
+    const title = parts[0].trim().replace(/^#\s*/, "");
+    const content = parts.slice(1).join("|").trim();
+    if (title && content.length >= 20) {
+      return { title, content };
+    }
+  }
+
+  // 2. Fallback: Split by newline(s)
+  const lines = cleaned.split("\n").map((line) => line.trim()).filter(Boolean);
+  if (lines.length >= 2) {
+    const title = lines[0].replace(/^#\s*/, "");
+    const content = lines.slice(1).join("\n\n");
+    if (title && content.length >= 20) {
+      return { title, content };
+    }
+  }
+  return null;
 }
 
 async function createQuickPost(chatId: string, text: string) {
@@ -268,14 +286,25 @@ async function handleCallback(query: TelegramCallbackQuery) {
   if (!isAllowedTelegramAdmin(fromId) || !chatId) return { ok: false, status: 403 };
   const data = query.data || "";
   if (data.startsWith("post:")) {
-    const [, action, postId] = data.split(":");
+    const [, rawAction, postId] = data.split(":");
     if (!postId) return { ok: false };
+    
+    let action = rawAction;
+    if (action === "PUBLISH") action = "PUBLISHED";
+
     if (action === "DELETE") {
       await prisma.post.delete({ where: { id: postId } });
       await answerCallbackQuery(query.id, "تم حذف المقال");
       await sendTelegramMessage(chatId, "تم حذف المقال.");
       return { ok: true };
     }
+
+    const validStatuses = ["DRAFT", "REVIEW", "NEEDS_EDIT", "SCHEDULED", "PUBLISHED", "ARCHIVED", "REJECTED"];
+    if (!validStatuses.includes(action)) {
+      await answerCallbackQuery(query.id, "إجراء غير صالح");
+      return { ok: false };
+    }
+
     const post = await prisma.post.update({ where: { id: postId }, data: { status: action as never, publishedAt: action === "PUBLISHED" ? new Date() : null } });
     if (post.status === "PUBLISHED") {
       await afterTelegramPostPublished(post.slug);
@@ -301,6 +330,29 @@ async function showSettings(chatId: string) {
 }
 
 export async function handleTelegramUpdate(update: TelegramUpdate) {
+  // Prevent duplicate processing of the same update_id
+  if (update.update_id) {
+    const updateIdStr = `update:${update.update_id}`;
+    const alreadyProcessed = await prisma.telegramPublishLog.findFirst({
+      where: { chatId: updateIdStr },
+      select: { id: true }
+    });
+    if (alreadyProcessed) {
+      console.log(`Telegram update ${update.update_id} already processed, skipping.`);
+      return { ok: true, skipped: true, reason: "duplicate update_id" };
+    }
+    
+    // Mark update_id as processed
+    await prisma.telegramPublishLog.create({
+      data: {
+        chatId: updateIdStr,
+        status: "processed"
+      }
+    }).catch((err: any) => {
+      console.error("Failed to log Telegram update_id to DB:", err);
+    });
+  }
+
   if (update.callback_query) return handleCallback(update.callback_query);
   const message = update.message;
   if (!message) return { ok: true };
@@ -342,36 +394,40 @@ export async function handleTelegramUpdate(update: TelegramUpdate) {
     const categories = await prisma.category.findMany({ where: { isActive: true }, orderBy: [{ order: "asc" }, { name: "asc" }] });
     const index = Number(text) - 1;
     let category = Number.isInteger(index) && categories[index] ? categories[index] : categories.find((c: any) => c.name.trim() === text.trim());
-    if (!category && text) category = await prisma.category.create({ data: { name: text.trim(), slug: `${makeSlug(text)}-${Date.now().toString(36)}`, isActive: true } });
-    await upsertDraft(chatId, "SCHEDULE", { ...data, categoryId: category?.id, categoryName: category?.name });
-    await sendTelegramMessage(chatId, "متى ننشر؟\nاكتب: الآن\nأو موعد مكة بصيغة: 2026-05-13 18:30");
-    return { ok: true };
-  }
-  if (draft.step === "SCHEDULE") {
-    const scheduledAt = parseSchedule(text);
-    await upsertDraft(chatId, "CONFIRM", { ...data, scheduledAt });
-    await sendTelegramMessage(chatId, `راجع المسودة:\n\nالعنوان: ${data.title}\nالكاتب: ${data.authorName || "فريق التحرير"}\nالتصنيف: ${data.categoryName || "-"}\nالنشر: ${scheduledAt ? `مجدول ${text} بتوقيت مكة` : "الآن"}\n\nاكتب: تأكيد\nأو /cancel للإلغاء`);
+    if (!category && text) {
+      category = await prisma.category.create({
+        data: {
+          name: text.trim(),
+          slug: `${makeSlug(text)}-${Date.now().toString(36)}`,
+          isActive: true
+        }
+      });
+    }
+    const updatedData = { ...data, categoryId: category?.id, categoryName: category?.name, scheduledAt: null };
+    await upsertDraft(chatId, "CONFIRM", updatedData);
+    await sendTelegramMessage(chatId, `راجع المسودة التحريرية:\n\nالعنوان: ${data.title}\nالكاتب: ${data.authorName || "فريق التحرير"}\nالتصنيف: ${category?.name || "-"}\n\nاكتب: <b>تأكيد</b> للنشر فوراً، أو /cancel للإلغاء.`);
     return { ok: true };
   }
   if (draft.step === "CONFIRM") {
-    if (!["تأكيد", "confirm", "نعم"].includes(text.toLowerCase())) { await sendTelegramMessage(chatId, "اكتب: تأكيد للنشر أو /cancel للإلغاء."); return { ok: true }; }
+    if (!["تأكيد", "confirm", "نعم"].includes(text.toLowerCase())) {
+      await sendTelegramMessage(chatId, "اكتب: تأكيد للنشر أو /cancel للإلغاء.");
+      return { ok: true };
+    }
     const post = await publishDraft(chatId, data);
     const postId = post.id;
     const slug = post.slug;
     const buttons: TelegramInlineKeyboardButton[][] = [
-      [{ text: "نشر", callback_data: `post:PUBLISH:${postId}` }],
-      [{ text: "تعديل", callback_data: `post:EDIT:${postId}` }],
-      [{ text: "حذف", callback_data: `post:DELETE:${postId}` }],
+      [
+        { text: "فتح المقال الرسمي", url: `${siteUrl}/articles/${slug}` },
+        { text: "تعديل في الأدمن", url: `${siteUrl}/admin/articles?post=${postId}` },
+      ],
+      [
+        { text: "تحويل لمسودة", callback_data: `post:DRAFT:${postId}` },
+        { text: "حذف المقال", callback_data: `post:DELETE:${postId}` },
+      ]
     ];
 
-    if (slug) {
-      buttons.unshift([
-        { text: "فتح المقال", url: `${siteUrl}/articles/${slug}` },
-        { text: "فتح في الأدمن", url: `${siteUrl}/admin/articles?post=${postId}` },
-      ]);
-    }
-
-    await sendTelegramMessage(chatId, post.status === "PUBLISHED" ? `تم نشر المقال بنجاح.` : `تمت جدولة المقال للنشر لاحقًا: ${post.title}`, {
+    await sendTelegramMessage(chatId, `🎉 تم نشر المقال بنجاح على المنصة!\n\n<b>العنوان:</b> ${escapeHtml(post.title)}\n\n🔗 <b>الرابط الرسمي:</b> ${siteUrl}/articles/${slug}\n🛠️ <b>رابط التعديل في الأدمن:</b> ${siteUrl}/admin/articles?post=${postId}`, {
       reply_markup: { inline_keyboard: buttons }
     });
     return { ok: true };

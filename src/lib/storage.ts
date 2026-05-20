@@ -7,6 +7,7 @@ const ALLOWED_MIME_TYPES = new Set([
   "image/png",
   "image/webp",
   "image/gif",
+  "image/svg+xml",
   "video/mp4",
   "audio/mpeg",
   "audio/mp4",

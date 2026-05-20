@@ -13,7 +13,7 @@
     "seed": "prisma db seed",
     "cleanup:demo": "tsx scripts/cleanup-demo-data.ts",
     "db:push": "prisma db push",
-    "db:verify": "prisma db push --force-reset && npm run seed",
+    "db:verify": "prisma db push && npm run seed",
     "db:setup": "prisma generate && prisma db push && npm run seed",
     "typecheck": "tsc --noEmit",
     "deploy:check": "prisma generate && next build"
